@@ -1,0 +1,66 @@
+import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { NextRequest } from "next/server";
+
+type Ctx = { params: Promise<{ id: string }> };
+
+// POST /api/events/[id]/redeem — mark registration as checked in
+export async function POST(req: NextRequest, { params }: Ctx) {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== "ORGANIZER") {
+    return Response.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { id: eventId } = await params;
+
+  const event = await prisma.event.findUnique({ where: { id: eventId } });
+  if (!event) return Response.json({ error: "Event not found" }, { status: 404 });
+  if (event.organizerId !== session.user.id) {
+    return Response.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { qrCodeString, registrationId } = await req.json();
+
+  // Find registration by QR string or by ID
+  const where = qrCodeString
+    ? { qrCodeString, eventId }
+    : { id: registrationId, eventId };
+
+  const registration = await prisma.registration.findFirst({
+    where,
+    include: {
+      attendee: { select: { id: true, name: true, email: true } },
+      ticketType: true,
+    },
+  });
+
+  if (!registration) {
+    return Response.json({ error: "Registration not found" }, { status: 404 });
+  }
+
+  if (registration.checkedInAt) {
+    return Response.json(
+      {
+        error: "Already checked in",
+        checkedInAt: registration.checkedInAt,
+        attendee: registration.attendee,
+      },
+      { status: 409 }
+    );
+  }
+
+  const updated = await prisma.registration.update({
+    where: { id: registration.id },
+    data: {
+      checkedInAt: new Date(),
+      status: "CHECKED_IN",
+    },
+    include: {
+      attendee: { select: { id: true, name: true, email: true } },
+      ticketType: true,
+    },
+  });
+
+  return Response.json(updated);
+}

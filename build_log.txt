@@ -1,0 +1,49 @@
+
+> eventkh@0.1.0 build
+> next build
+
+▲ Next.js 16.2.6 (Turbopack)
+- Environments: .env
+
+  Creating an optimized production build ...
+(node:34204) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+✓ Compiled successfully in 2.0s
+  Running TypeScript ...
+  Finished TypeScript in 1989ms ...
+  Collecting page data using 10 workers ...
+Error [PrismaClientInitializationError]: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+
+```
+new PrismaClient({
+  ...
+})
+```
+
+or
+
+```
+constructor() {
+  super({ ... });
+}
+```
+          
+    at module evaluation (C:\Users\Asus\Documents\EventKH\eventkh\.next\server\chunks\src_lib_prisma_ts_0bukomn._.js:1:81)
+    at instantiateModule (C:\Users\Asus\Documents\EventKH\eventkh\.next\server\chunks\[turbopack]_runtime.js:853:9)
+    at getOrInstantiateModuleFromParent (C:\Users\Asus\Documents\EventKH\eventkh\.next\server\chunks\[turbopack]_runtime.js:877:12)
+    at Context.esmImport [as i] (C:\Users\Asus\Documents\EventKH\eventkh\.next\server\chunks\[turbopack]_runtime.js:281:20)
+    at module evaluation (C:\Users\Asus\Documents\EventKH\eventkh\.next\server\chunks\[root-of-the-server]__0dgnm-e._.js:1:1443)
+    at instantiateModule (C:\Users\Asus\Documents\EventKH\eventkh\.next\server\chunks\[turbopack]_runtime.js:853:9)
+    at instantiateRuntimeModule (C:\Users\Asus\Documents\EventKH\eventkh\.next\server\chunks\[turbopack]_runtime.js:882:12)
+    at getOrInstantiateRuntimeModule (C:\Users\Asus\Documents\EventKH\eventkh\.next\server\chunks\[turbopack]_runtime.js:895:12)
+    at Object.m (C:\Users\Asus\Documents\EventKH\eventkh\.next\server\chunks\[turbopack]_runtime.js:898:18) {
+  clientVersion: '7.8.0',
+  errorCode: undefined,
+  retryable: undefined
+}
+
+> Build error occurred
+Error: Failed to collect page data for /api/register
+    at ignore-listed frames {
+  type: 'Error'
+}

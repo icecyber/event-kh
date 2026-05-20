@@ -1,0 +1,101 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("ATTENDEE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events        Event[]        @relation("OrganizerEvents")
+  registrations Registration[]
+}
+
+model Event {
+  id                 String   @id @default(cuid())
+  title              String
+  description        String?
+  date               DateTime
+  startTime          String?
+  endTime            String?
+  location           String?
+  capacity           Int?
+  bannerImageURL     String?
+  badgeBackgroundURL String?
+  isPublished        Boolean  @default(false)
+  organizerId        String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  organizer     User           @relation("OrganizerEvents", fields: [organizerId], references: [id])
+  ticketTypes   TicketType[]
+  registrations Registration[]
+  customFields  CustomField[]
+}
+
+model TicketType {
+  id                String   @id @default(cuid())
+  eventId           String
+  name              String   // e.g., VIP, General
+  price             Float    // 0 for free
+  quantityAvailable Int?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  event         Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  registrations Registration[]
+}
+
+model CustomField {
+  id        String   @id @default(cuid())
+  eventId   String
+  label     String
+  fieldType String   // text | textarea | select | checkbox | number
+  required  Boolean  @default(false)
+  options   String?  // JSON array of strings for select fields
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  event   Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  answers CustomFieldAnswer[]
+}
+
+model Registration {
+  id               String    @id @default(cuid())
+  eventId          String
+  attendeeId       String
+  ticketTypeId     String
+  status           String    @default("PENDING")
+  qrCodeString     String?   @unique
+  checkedInAt      DateTime?
+  badgeIssuedAt    DateTime?
+  registrationDate DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  event          Event               @relation(fields: [eventId], references: [id])
+  attendee       User                @relation(fields: [attendeeId], references: [id])
+  ticketType     TicketType          @relation(fields: [ticketTypeId], references: [id])
+  customAnswers  CustomFieldAnswer[]
+}
+
+model CustomFieldAnswer {
+  id             String   @id @default(cuid())
+  registrationId String
+  customFieldId  String
+  fieldName      String
+  answerValue    String
+
+  registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  customField    CustomField  @relation(fields: [customFieldId], references: [id])
+}

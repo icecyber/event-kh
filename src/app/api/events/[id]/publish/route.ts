@@ -1,0 +1,28 @@
+import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { NextRequest } from "next/server";
+
+type Ctx = { params: Promise<{ id: string }> };
+
+// POST /api/events/[id]/publish — toggle publish (organizer only)
+export async function POST(_req: NextRequest, { params }: Ctx) {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== "ORGANIZER") {
+    return Response.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { id } = await params;
+  const event = await prisma.event.findUnique({ where: { id } });
+  if (!event) return Response.json({ error: "Not found" }, { status: 404 });
+  if (event.organizerId !== session.user.id) {
+    return Response.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const updated = await prisma.event.update({
+    where: { id },
+    data: { isPublished: !event.isPublished },
+  });
+
+  return Response.json({ isPublished: updated.isPublished });
+}
