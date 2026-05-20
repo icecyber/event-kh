@@ -9,8 +9,6 @@ type Ctx = { params: Promise<{ id: string; regId: string }> };
 // GET /api/events/[id]/registrations/[regId]/badge
 export async function GET(req: NextRequest, { params }: Ctx) {
   const session = await getServerSession(authOptions);
-  if (!session) return new Response("Unauthorized", { status: 401 });
-
   const { id: eventId, regId } = await params;
 
   const registration = await prisma.registration.findUnique({
@@ -24,13 +22,14 @@ export async function GET(req: NextRequest, { params }: Ctx) {
 
   if (!registration) return new Response("Not found", { status: 404 });
 
-  // Only attendee themselves or organizer can download
-  const isOwner = registration.attendeeId === session.user.id;
-  const isOrganizer =
+  // Only attendee themselves, guest (if exhibition), or organizer can download
+  const isOwner = session && registration.attendeeId === session.user.id;
+  const isGuestAllowed = registration.event.eventType === "EXHIBITION";
+  const isOrganizer = session &&
     session.user.role === "ORGANIZER" &&
     registration.event.organizerId === session.user.id;
 
-  if (!isOwner && !isOrganizer) {
+  if (!isOwner && !isOrganizer && !isGuestAllowed) {
     return new Response("Forbidden", { status: 403 });
   }
 
@@ -41,9 +40,11 @@ export async function GET(req: NextRequest, { params }: Ctx) {
     day: "numeric",
   });
 
+  const attendeeName = registration.attendee?.name || registration.guestName || "Guest Attendee";
+
   const png = await generateBadgePNG({
     eventTitle: event.title,
-    attendeeName: registration.attendee.name,
+    attendeeName,
     ticketType: registration.ticketType.name,
     eventDate: event.startTime ? `${dateStr} · ${event.startTime}` : dateStr,
     eventLocation: event.location ?? undefined,
@@ -56,7 +57,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
     data: { badgeIssuedAt: new Date() },
   });
 
-  const safeName = registration.attendee.name.replace(/[^a-z0-9]/gi, "_");
+  const safeName = attendeeName.replace(/[^a-z0-9]/gi, "_");
   return new Response(new Uint8Array(png), {
     headers: {
       "Content-Type": "image/png",

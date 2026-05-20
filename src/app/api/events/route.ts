@@ -26,68 +26,86 @@ export async function GET(request: NextRequest) {
 
 // POST /api/events — create event (ORGANIZER only)
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "ORGANIZER") {
-    return Response.json({ error: "Forbidden" }, { status: 403 });
-  }
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "ORGANIZER") {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
+    }
 
-  const body = await request.json();
-  const {
-    title,
-    description,
-    date,
-    startTime,
-    endTime,
-    location,
-    capacity,
-    bannerImageURL,
-    badgeBackgroundURL,
-    ticketTypes,
-    customFields,
-  } = body;
-
-  if (!title || !date) {
-    return Response.json({ error: "title and date are required" }, { status: 400 });
-  }
-
-  const event = await prisma.event.create({
-    data: {
+    const body = await request.json();
+    const {
       title,
       description,
-      date: new Date(date),
+      date,
       startTime,
       endTime,
       location,
-      capacity: capacity ? Number(capacity) : null,
+      capacity,
       bannerImageURL,
       badgeBackgroundURL,
-      organizerId: session.user.id,
-      ticketTypes: {
-        create: (ticketTypes ?? [{ name: "General", price: 0 }]).map(
-          (t: { name: string; price: number; quantityAvailable?: number }) => ({
-            name: t.name,
-            price: t.price ?? 0,
-            quantityAvailable: t.quantityAvailable ?? null,
-          })
-        ),
-      },
-      customFields: {
-        create: (customFields ?? []).map(
-          (
-            f: { label: string; fieldType: string; required?: boolean; options?: string[]; order?: number },
-            idx: number
-          ) => ({
-            label: f.label,
-            fieldType: f.fieldType,
-            required: f.required ?? false,
-            options: f.options ? JSON.stringify(f.options) : null,
-            order: f.order ?? idx,
-          })
-        ),
-      },
-    },
-    include: { ticketTypes: true, customFields: true },
-  });
+      eventType,
+      ticketTypes,
+      customFields,
+    } = body;
 
-  return Response.json(event, { status: 201 });
+    if (!title || !date) {
+      return Response.json({ error: "title and date are required" }, { status: 400 });
+    }
+
+    // Verify organizer user exists in database to prevent P2003 foreign key violation due to stale session cookies
+    const userExists = await prisma.user.findUnique({
+      where: { id: session.user.id }
+    });
+
+    if (!userExists) {
+      return Response.json({
+        error: "Your session is invalid or your account no longer exists. Please sign out and sign back in to refresh your session."
+      }, { status: 401 });
+    }
+
+    const event = await prisma.event.create({
+      data: {
+        title,
+        description,
+        date: new Date(date),
+        startTime,
+        endTime,
+        location,
+        capacity: capacity ? Number(capacity) : null,
+        bannerImageURL,
+        badgeBackgroundURL,
+        eventType: eventType || "STANDARD",
+        organizerId: session.user.id,
+        ticketTypes: {
+          create: (ticketTypes ?? [{ name: "General", price: 0 }]).map(
+            (t: { name: string; price: number; quantityAvailable?: number }) => ({
+              name: t.name,
+              price: t.price ?? 0,
+              quantityAvailable: t.quantityAvailable ?? null,
+            })
+          ),
+        },
+        customFields: {
+          create: (customFields ?? []).map(
+            (
+              f: { label: string; fieldType: string; required?: boolean; options?: string[]; order?: number },
+              idx: number
+            ) => ({
+              label: f.label,
+              fieldType: f.fieldType,
+              required: f.required ?? false,
+              options: f.options ? JSON.stringify(f.options) : null,
+              order: f.order ?? idx,
+            })
+          ),
+        },
+      },
+      include: { ticketTypes: true, customFields: true },
+    });
+
+    return Response.json(event, { status: 201 });
+  } catch (error: any) {
+    console.error("Error creating event:", error);
+    return Response.json({ error: error.message || "Failed to create event" }, { status: 500 });
+  }
 }

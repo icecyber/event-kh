@@ -40,11 +40,16 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   }
 
   if (registration.checkedInAt) {
+    const attendee = registration.attendee || {
+      id: null,
+      name: registration.guestName,
+      email: registration.guestEmail || registration.guestPhone,
+    };
     return Response.json(
       {
         error: "Already checked in",
         checkedInAt: registration.checkedInAt,
-        attendee: registration.attendee,
+        attendee,
       },
       { status: 409 }
     );
@@ -62,5 +67,14 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     },
   });
 
-  return Response.json(updated);
+  const responseData = {
+    ...updated,
+    attendee: updated.attendee || {
+      id: null,
+      name: updated.guestName,
+      email: updated.guestEmail || updated.guestPhone,
+    },
+  };
+
+  return Response.json(responseData);
 }

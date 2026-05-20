@@ -45,6 +45,7 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
     "No.",
     "Name",
     "Email",
+    "Phone",
     "Ticket Type",
     "Status",
     "Registered At",
@@ -55,15 +56,19 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
 
   const rows = registrations.map((reg, idx) => {
     const customValues = customFields.map((field) => {
-
       const answer = reg.customAnswers.find((a) => a.fieldName === field.label);
       return answer?.answerValue ?? "";
     });
 
+    const name = reg.attendee?.name || reg.guestName || "";
+    const email = reg.attendee?.email || reg.guestEmail || "";
+    const phone = reg.guestPhone || "";
+
     return [
       String(idx + 1),
-      reg.attendee.name,
-      reg.attendee.email,
+      name,
+      email,
+      phone,
       reg.ticketType.name,
       reg.status,
       new Date(reg.registrationDate).toISOString(),

@@ -31,6 +31,8 @@ export default function CreateEventPage() {
   const [capacity, setCapacity] = useState("");
   const [bannerImageURL, setBannerImageURL] = useState("");
   const [badgeBackgroundURL, setBadgeBackgroundURL] = useState("");
+  const [eventType, setEventType] = useState("STANDARD");
+
 
   // Step 2: Tickets
   const [tickets, setTickets] = useState<TicketTypeInput[]>([
@@ -77,6 +79,7 @@ export default function CreateEventPage() {
         capacity: capacity ? Number(capacity) : undefined,
         bannerImageURL: bannerImageURL || undefined,
         badgeBackgroundURL: badgeBackgroundURL || undefined,
+        eventType,
         ticketTypes: tickets.map((t) => ({
           name: t.name,
           price: 0,
@@ -148,6 +151,35 @@ export default function CreateEventPage() {
           {/* Step 0: Basic Info */}
           {step === 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+              <div className="form-group">
+                <label className="form-label">Event Type <span className="req">*</span></label>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                  <label style={{
+                    display: "flex", flexDirection: "column", gap: "0.25rem", padding: "1rem",
+                    border: `2px solid ${eventType === "STANDARD" ? "var(--brand-500)" : "var(--gray-200)"}`,
+                    borderRadius: "0.75rem", cursor: "pointer", background: eventType === "STANDARD" ? "var(--brand-50)" : "#fff",
+                    transition: "all 0.2s"
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <input type="radio" name="eventType" value="STANDARD" checked={eventType === "STANDARD"} onChange={() => setEventType("STANDARD")} style={{ accentColor: "var(--brand-600)" }} />
+                      <strong style={{ color: "var(--gray-800)" }}>📅 Standard Event</strong>
+                    </div>
+                    <span style={{ fontSize: "0.8rem", color: "var(--gray-500)", marginLeft: "1.5rem" }}>Requires attendees to log in. Best for workshops, panels.</span>
+                  </label>
+                  <label style={{
+                    display: "flex", flexDirection: "column", gap: "0.25rem", padding: "1rem",
+                    border: `2px solid ${eventType === "EXHIBITION" ? "var(--brand-500)" : "var(--gray-200)"}`,
+                    borderRadius: "0.75rem", cursor: "pointer", background: eventType === "EXHIBITION" ? "var(--brand-50)" : "#fff",
+                    transition: "all 0.2s"
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <input type="radio" name="eventType" value="EXHIBITION" checked={eventType === "EXHIBITION"} onChange={() => setEventType("EXHIBITION")} style={{ accentColor: "var(--brand-600)" }} />
+                      <strong style={{ color: "var(--gray-800)" }}>🎪 Exhibition</strong>
+                    </div>
+                    <span style={{ fontSize: "0.8rem", color: "var(--gray-500)", marginLeft: "1.5rem" }}>Zero friction! Attendees register using just Name + Phone without signing in.</span>
+                  </label>
+                </div>
+              </div>
               <div className="form-group">
                 <label className="form-label">Event Title <span className="req">*</span></label>
                 <input className="form-input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Tech Summit 2026" required />
@@ -269,6 +301,7 @@ export default function CreateEventPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
               <div className="alert alert-info">Review your event details before creating. You can publish it later from the event management page.</div>
               <dl style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <div><dt style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--gray-400)", textTransform: "uppercase" }}>Event Type</dt><dd style={{ fontWeight: 600, color: "var(--gray-900)" }}>{eventType === "EXHIBITION" ? "🎪 Exhibition (No Login Required)" : "📅 Standard Event (Login Required)"}</dd></div>
                 <div><dt style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--gray-400)", textTransform: "uppercase" }}>Title</dt><dd style={{ fontWeight: 600, color: "var(--gray-900)" }}>{title}</dd></div>
                 {description && <div><dt style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--gray-400)", textTransform: "uppercase" }}>Description</dt><dd style={{ color: "var(--gray-600)", fontSize: "0.9rem" }}>{description}</dd></div>}
                 <div><dt style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--gray-400)", textTransform: "uppercase" }}>Date</dt><dd style={{ color: "var(--gray-700)" }}>{date}{startTime && ` · ${startTime}`}{endTime && ` – ${endTime}`}</dd></div>

@@ -9,7 +9,10 @@ interface Participant {
   checkedInAt?: string | null;
   badgeIssuedAt?: string | null;
   qrCodeString?: string | null;
-  attendee: { id: string; name: string; email: string };
+  attendee?: { id: string; name: string; email: string } | null;
+  guestName?: string | null;
+  guestPhone?: string | null;
+  guestEmail?: string | null;
   ticketType: { name: string };
   customAnswers: { fieldName: string; answerValue: string }[];
 }
@@ -69,7 +72,8 @@ export default function ParticipantsTab({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `badge-${reg.attendee.name.replace(/[^a-z0-9]/gi, "_")}.png`;
+    const name = reg.attendee?.name || reg.guestName || "Guest";
+    a.download = `badge-${name.replace(/[^a-z0-9]/gi, "_")}.png`;
     a.click();
     URL.revokeObjectURL(url);
     await fetchParticipants();
@@ -128,7 +132,7 @@ export default function ParticipantsTab({
               <tr>
                 <th>#</th>
                 <th>Name</th>
-                <th>Email</th>
+                <th>Email / Phone</th>
                 <th>Ticket</th>
                 <th>Registered</th>
                 <th>Status</th>
@@ -136,50 +140,55 @@ export default function ParticipantsTab({
               </tr>
             </thead>
             <tbody>
-              {participants.map((p, idx) => (
-                <tr key={p.id}>
-                  <td style={{ color: "var(--gray-400)", fontWeight: 500 }}>{idx + 1}</td>
-                  <td style={{ fontWeight: 600, color: "var(--gray-900)" }}>{p.attendee.name}</td>
-                  <td style={{ color: "var(--gray-500)" }}>{p.attendee.email}</td>
-                  <td><span className="badge badge-purple">{p.ticketType.name}</span></td>
-                  <td style={{ color: "var(--gray-500)", fontSize: "0.85rem", whiteSpace: "nowrap" }}>
-                    {new Date(p.registrationDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                  </td>
-                  <td>
-                    {p.checkedInAt ? (
-                      <div>
-                        <span className="badge badge-green">✅ Checked In</span>
-                        <div style={{ fontSize: "0.75rem", color: "var(--gray-400)", marginTop: 2 }}>
-                          {new Date(p.checkedInAt).toLocaleTimeString()}
+              {participants.map((p, idx) => {
+                const name = p.attendee?.name || p.guestName || "Guest Attendee";
+                const contact = p.attendee?.email || p.guestEmail || (p.guestPhone ? `📞 ${p.guestPhone}` : "-");
+
+                return (
+                  <tr key={p.id}>
+                    <td style={{ color: "var(--gray-400)", fontWeight: 500 }}>{idx + 1}</td>
+                    <td style={{ fontWeight: 600, color: "var(--gray-900)" }}>{name}</td>
+                    <td style={{ color: "var(--gray-500)" }}>{contact}</td>
+                    <td><span className="badge badge-purple">{p.ticketType.name}</span></td>
+                    <td style={{ color: "var(--gray-500)", fontSize: "0.85rem", whiteSpace: "nowrap" }}>
+                      {new Date(p.registrationDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    </td>
+                    <td>
+                      {p.checkedInAt ? (
+                        <div>
+                          <span className="badge badge-green">✅ Checked In</span>
+                          <div style={{ fontSize: "0.75rem", color: "var(--gray-400)", marginTop: 2 }}>
+                            {new Date(p.checkedInAt).toLocaleTimeString()}
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <span className="badge badge-blue">🎟️ Registered</span>
-                    )}
-                  </td>
-                  <td className="no-print">
-                    <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
-                      {!p.checkedInAt && (
-                        <button
-                          className="btn btn-success btn-sm"
-                          onClick={() => handleRedeem(p)}
-                          disabled={redeemingId === p.id}
-                          title="Check in"
-                        >
-                          {redeemingId === p.id ? <span className="spinner" /> : "✅ Redeem"}
-                        </button>
+                      ) : (
+                        <span className="badge badge-blue">🎟️ Registered</span>
                       )}
-                      <button
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => handleDownloadBadge(p)}
-                        title="Download badge"
-                      >
-                        🎫 Badge
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="no-print">
+                      <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                        {!p.checkedInAt && (
+                          <button
+                            className="btn btn-success btn-sm"
+                            onClick={() => handleRedeem(p)}
+                            disabled={redeemingId === p.id}
+                            title="Check in"
+                          >
+                            {redeemingId === p.id ? <span className="spinner" /> : "✅ Redeem"}
+                          </button>
+                        )}
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => handleDownloadBadge(p)}
+                          title="Download badge"
+                        >
+                          🎫 Badge
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

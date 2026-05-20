@@ -32,6 +32,9 @@ export async function GET(req: NextRequest, { params }: Ctx) {
       ? [
           { attendee: { name: { contains: search } } },
           { attendee: { email: { contains: search } } },
+          { guestName: { contains: search } },
+          { guestPhone: { contains: search } },
+          { guestEmail: { contains: search } },
         ]
       : undefined,
   };

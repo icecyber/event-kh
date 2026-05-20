@@ -16,8 +16,6 @@ export default async function ConfirmationPage({
   const { id: eventId, regId } = await params;
   const session = await getServerSession(authOptions);
 
-  if (!session) redirect(`/login?callbackUrl=/events/${eventId}/confirmation/${regId}`);
-
   const registration = await prisma.registration.findUnique({
     where: { id: regId },
     include: {
@@ -30,12 +28,20 @@ export default async function ConfirmationPage({
 
   if (!registration) notFound();
 
-  // Access control
-  const isOwner = registration.attendeeId === session.user.id;
-  const isOrganizer =
-    session.user.role === "ORGANIZER" &&
-    registration.event.organizerId === session.user.id;
-  if (!isOwner && !isOrganizer) redirect("/dashboard");
+  // If standard event, user must be authenticated and own the registration
+  const isGuestAllowed = registration.event.eventType === "EXHIBITION";
+  if (!isGuestAllowed && !session) {
+    redirect(`/login?callbackUrl=/events/${eventId}/confirmation/${regId}`);
+  }
+
+  // Access control for standard events
+  if (!isGuestAllowed) {
+    const isOwner = session && registration.attendeeId === session.user.id;
+    const isOrganizer = session &&
+      session.user.role === "ORGANIZER" &&
+      registration.event.organizerId === session.user.id;
+    if (!isOwner && !isOrganizer) redirect("/dashboard");
+  }
 
   const dateStr = new Date(registration.event.date).toLocaleDateString("en-US", {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
@@ -44,6 +50,9 @@ export default async function ConfirmationPage({
   const qrDataURL = registration.qrCodeString
     ? await generateQRCodeDataURL(registration.qrCodeString)
     : null;
+
+  const attendeeName = registration.attendee?.name || registration.guestName || "Guest Attendee";
+  const contactInfo = registration.attendee?.email || registration.guestEmail || (registration.guestPhone ? `📞 ${registration.guestPhone}` : "");
 
   return (
     <main style={{ minHeight: "calc(100vh - 64px)", background: "var(--gray-50)", padding: "2.5rem 1.5rem" }}>
@@ -92,8 +101,14 @@ export default async function ConfirmationPage({
               </div>
               <div>
                 <dt style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--gray-400)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Attendee</dt>
-                <dd style={{ color: "var(--gray-700)" }}>{registration.attendee.name}</dd>
+                <dd style={{ color: "var(--gray-700)" }}>{attendeeName}</dd>
               </div>
+              {contactInfo && (
+                <div>
+                  <dt style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--gray-400)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Contact</dt>
+                  <dd style={{ color: "var(--gray-700)" }}>{contactInfo}</dd>
+                </div>
+              )}
               <div>
                 <dt style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--gray-400)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Status</dt>
                 <dd>
@@ -148,14 +163,20 @@ export default async function ConfirmationPage({
 
         {/* Actions */}
         <div style={{ marginTop: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          <BadgeDownloadButton eventId={eventId} regId={regId} attendeeName={registration.attendee.name} />
+          <BadgeDownloadButton eventId={eventId} regId={regId} attendeeName={attendeeName} />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
             <Link href={`/events/${eventId}`} className="btn btn-secondary" style={{ justifyContent: "center" }}>
               ← Back to Event
             </Link>
-            <Link href="/dashboard" className="btn btn-secondary" style={{ justifyContent: "center" }}>
-              My Dashboard
-            </Link>
+            {session ? (
+              <Link href="/dashboard" className="btn btn-secondary" style={{ justifyContent: "center" }}>
+                My Dashboard
+              </Link>
+            ) : (
+              <Link href="/" className="btn btn-secondary" style={{ justifyContent: "center" }}>
+                🏠 Home Page
+              </Link>
+            )}
           </div>
         </div>
       </div>

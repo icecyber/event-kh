@@ -34,6 +34,7 @@ model Event {
   bannerImageURL     String?
   badgeBackgroundURL String?
   isPublished        Boolean  @default(false)
+  eventType          String   @default("STANDARD") // STANDARD or EXHIBITION
   organizerId        String
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
@@ -74,7 +75,10 @@ model CustomField {
 model Registration {
   id               String    @id @default(cuid())
   eventId          String
-  attendeeId       String
+  attendeeId       String?
+  guestName        String?
+  guestPhone       String?
+  guestEmail       String?
   ticketTypeId     String
   status           String    @default("PENDING")
   qrCodeString     String?   @unique
@@ -84,7 +88,7 @@ model Registration {
   updatedAt        DateTime  @updatedAt
 
   event          Event               @relation(fields: [eventId], references: [id])
-  attendee       User                @relation(fields: [attendeeId], references: [id])
+  attendee       User?               @relation(fields: [attendeeId], references: [id])
   ticketType     TicketType          @relation(fields: [ticketTypeId], references: [id])
   customAnswers  CustomFieldAnswer[]
 }

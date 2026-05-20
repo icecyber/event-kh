@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Html5QrcodeScanner } from "html5-qrcode";
 
 interface QrScannerProps {
   onScan: (result: string) => void;
@@ -25,10 +26,9 @@ export default function QrScanner({ onScan, onError, active = true }: QrScannerP
 
     let stopped = false;
 
-    const startScanner = async () => {
+    const startScanner = () => {
       try {
         setStatus("starting");
-        const { Html5QrcodeScanner } = await import("html5-qrcode");
 
         if (stopped || !containerRef.current) return;
 

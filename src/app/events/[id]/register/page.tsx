@@ -11,10 +11,6 @@ export default async function RegisterPage({ params }: { params: Promise<{ id: s
   const { id } = await params;
   const session = await getServerSession(authOptions);
 
-  if (!session) {
-    redirect(`/login?callbackUrl=/events/${id}/register`);
-  }
-
   const event = await prisma.event.findUnique({
     where: { id, isPublished: true },
     include: {
@@ -25,10 +21,18 @@ export default async function RegisterPage({ params }: { params: Promise<{ id: s
 
   if (!event) notFound();
 
-  // Already registered?
-  const existing = await prisma.registration.findFirst({
-    where: { eventId: id, attendeeId: session.user.id },
-  });
+  // If not Exhibition, user must be logged in
+  if (event.eventType !== "EXHIBITION" && !session) {
+    redirect(`/login?callbackUrl=/events/${id}/register`);
+  }
+
+  // Already registered? Only check if logged in
+  let existing = null;
+  if (session) {
+    existing = await prisma.registration.findFirst({
+      where: { eventId: id, attendeeId: session.user.id },
+    });
+  }
   if (existing) {
     redirect(`/events/${id}/confirmation/${existing.id}`);
   }
@@ -55,7 +59,7 @@ export default async function RegisterPage({ params }: { params: Promise<{ id: s
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", fontSize: "0.875rem", color: "rgba(255,255,255,0.7)" }}>
             <span>📅 {dateStr}{event.startTime ? ` · ${event.startTime}` : ""}</span>
             {event.location && <span>📍 {event.location}</span>}
-            <span>👤 Registering as <strong style={{ color: "#fff" }}>{session.user.name}</strong></span>
+            <span>👤 Registering as <strong style={{ color: "#fff" }}>{session ? session.user.name : "Guest Attendee"}</strong></span>
           </div>
         </div>
 
@@ -68,6 +72,7 @@ export default async function RegisterPage({ params }: { params: Promise<{ id: s
             date: event.date.toISOString(),
             location: event.location ?? undefined,
             startTime: event.startTime ?? undefined,
+            eventType: event.eventType,
             ticketTypes: event.ticketTypes.map((t) => ({ id: t.id, name: t.name, price: t.price })),
             customFields: event.customFields.map((f) => ({
               id: f.id,

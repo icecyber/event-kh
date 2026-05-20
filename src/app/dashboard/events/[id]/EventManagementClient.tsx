@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import ParticipantsTab from "./ParticipantsTab";
 import RedeemTab from "./RedeemTab";
@@ -30,6 +30,11 @@ export default function EventManagementClient({ event }: { event: EventData }) {
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
   const [isPublished, setIsPublished] = useState(event.isPublished);
   const [publishing, setPublishing] = useState(false);
+  const [shareUrl, setShareUrl] = useState(`/events/${event.id}/register`);
+
+  useEffect(() => {
+    setShareUrl(`${window.location.origin}/events/${event.id}/register`);
+  }, [event.id]);
 
   const togglePublish = async () => {
     setPublishing(true);
@@ -43,7 +48,7 @@ export default function EventManagementClient({ event }: { event: EventData }) {
   };
 
   const dateStr = new Date(event.date).toLocaleDateString("en-US", {
-    weekday: "long", year: "numeric", month: "long", day: "numeric",
+    weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: "UTC"
   });
 
   return (
@@ -190,7 +195,7 @@ export default function EventManagementClient({ event }: { event: EventData }) {
               <div style={{ marginTop: "1.5rem" }}>
                 <h4 style={{ marginBottom: "0.75rem", color: "var(--gray-700)" }}>Registration Link</h4>
                 <div style={{ background: "var(--gray-50)", border: "1px solid var(--gray-200)", borderRadius: "0.5rem", padding: "0.75rem", fontFamily: "monospace", fontSize: "0.8rem", color: "var(--gray-600)", wordBreak: "break-all" }}>
-                  {typeof window !== "undefined" ? window.location.origin : ""}/events/{event.id}/register
+                  {shareUrl}
                 </div>
               </div>
             </div>

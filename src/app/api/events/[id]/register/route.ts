@@ -3,16 +3,12 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { createQRString } from "@/lib/qr";
 import { NextRequest } from "next/server";
+import crypto from "crypto";
 
 type Ctx = { params: Promise<{ id: string }> };
 
 // POST /api/events/[id]/register
 export async function POST(req: NextRequest, { params }: Ctx) {
-  const session = await getServerSession(authOptions);
-  if (!session) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const { id: eventId } = await params;
 
   // Fetch event with ticket types and custom fields
@@ -22,12 +18,47 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   });
   if (!event) return Response.json({ error: "Event not found" }, { status: 404 });
 
+  const session = await getServerSession(authOptions);
+  const isGuest = event.eventType === "EXHIBITION" && !session;
+
+  if (!session && !isGuest) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const body = await req.json();
+  const { ticketTypeId, answers, guestName, guestPhone, guestEmail } = body as {
+    ticketTypeId: string;
+    answers: { customFieldId: string; fieldName: string; answerValue: string }[];
+    guestName?: string;
+    guestPhone?: string;
+    guestEmail?: string;
+  };
+
   // Check duplicate registration
-  const existing = await prisma.registration.findFirst({
-    where: { eventId, attendeeId: session.user.id },
-  });
-  if (existing) {
-    return Response.json({ error: "Already registered", registrationId: existing.id }, { status: 409 });
+  if (session) {
+    const existing = await prisma.registration.findFirst({
+      where: { eventId, attendeeId: session.user.id },
+    });
+    if (existing) {
+      return Response.json({ error: "Already registered", registrationId: existing.id }, { status: 409 });
+    }
+  } else if (isGuest && guestPhone) {
+    const existing = await prisma.registration.findFirst({
+      where: { eventId, guestPhone: guestPhone.trim() },
+    });
+    if (existing) {
+      return Response.json({ error: "This phone number is already registered for this event." }, { status: 409 });
+    }
+  }
+
+  // Validate guest fields
+  if (isGuest) {
+    if (!guestName || !guestName.trim()) {
+      return Response.json({ error: "Full Name is required for guest checkout" }, { status: 400 });
+    }
+    if (!guestPhone || !guestPhone.trim()) {
+      return Response.json({ error: "Phone Number is required for guest checkout" }, { status: 400 });
+    }
   }
 
   // Check capacity
@@ -37,12 +68,6 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       return Response.json({ error: "Event is full" }, { status: 409 });
     }
   }
-
-  const body = await req.json();
-  const { ticketTypeId, answers } = body as {
-    ticketTypeId: string;
-    answers: { customFieldId: string; fieldName: string; answerValue: string }[];
-  };
 
   // Validate ticket type belongs to event
   const ticket = event.ticketTypes.find((t) => t.id === ticketTypeId);
@@ -63,14 +88,21 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     }
   }
 
+  // Unique key for guest vs logged in user
+  const uniqueId = session ? session.user.id : `guest-${crypto.randomUUID()}`;
+  const qrCodeString = createQRString(eventId + "-" + uniqueId);
+
   // Create registration
   const registration = await prisma.registration.create({
     data: {
       eventId,
-      attendeeId: session.user.id,
+      attendeeId: session ? session.user.id : null,
+      guestName: isGuest && guestName ? guestName.trim() : null,
+      guestPhone: isGuest && guestPhone ? guestPhone.trim() : null,
+      guestEmail: isGuest && guestEmail ? guestEmail.trim() || null : null,
       ticketTypeId,
       status: "CONFIRMED",
-      qrCodeString: createQRString(eventId + "-" + session.user.id),
+      qrCodeString,
       customAnswers: {
         create: (answers ?? []).map((a) => ({
           customFieldId: a.customFieldId,

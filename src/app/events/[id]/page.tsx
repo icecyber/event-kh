@@ -140,9 +140,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
               </div>
             ) : spotsLeft === 0 ? (
               <div className="alert alert-error">🚫 This event is full.</div>
-            ) : session ? (
+            ) : session || event.eventType === "EXHIBITION" ? (
               <Link href={`/events/${id}/register`} className="btn btn-primary" style={{ width: "100%", justifyContent: "center" }} id="register-btn">
-                Register Now →
+                {event.eventType === "EXHIBITION" ? "Register Now (No Login Required) →" : "Register Now →"}
               </Link>
             ) : (
               <div>

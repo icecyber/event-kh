@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 
 const QrScanner = dynamic(() => import("@/components/QrScanner"), { ssr: false });
@@ -20,6 +20,11 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
   const [manualCode, setManualCode] = useState("");
   const [manualLoading, setManualLoading] = useState(false);
   const lastScanned = useRef<string>("");
+
+  useEffect(() => {
+    // Preload the QrScanner chunk in the background so it starts instantly when clicked
+    import("@/components/QrScanner").catch(() => {});
+  }, []);
 
   const handleRedeem = useCallback(
     async (qrCodeString: string) => {
