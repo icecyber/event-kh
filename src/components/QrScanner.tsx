@@ -17,7 +17,7 @@ export default function QrScanner({ onScan, onError, active = true }: QrScannerP
   useEffect(() => {
     if (!active) {
       if (scannerRef.current) {
-        scannerRef.current.stop().catch(() => {});
+        scannerRef.current.clear().catch(() => {});
         scannerRef.current = null;
         setStatus("idle");
       }
@@ -65,7 +65,7 @@ export default function QrScanner({ onScan, onError, active = true }: QrScannerP
     return () => {
       stopped = true;
       if (scannerRef.current) {
-        scannerRef.current.stop().catch(() => {});
+        scannerRef.current.clear().catch(() => {});
         scannerRef.current = null;
       }
     };
