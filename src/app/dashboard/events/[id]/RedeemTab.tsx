@@ -28,6 +28,7 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
 
   const handleRedeem = useCallback(
     async (qrCodeString: string) => {
+      if (scanning) return;
       if (qrCodeString === lastScanned.current) return;
       lastScanned.current = qrCodeString;
       setScanning(true);
@@ -101,7 +102,7 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
         ) : (
           <>
             <QrScanner
-              active={scannerActive && !scanning}
+              active={scannerActive}
               onScan={handleRedeem}
               onError={(e) => setResult({ type: "error", message: e })}
             />

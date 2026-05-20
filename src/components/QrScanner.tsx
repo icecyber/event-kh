@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Html5QrcodeScanner } from "html5-qrcode";
+import { Html5Qrcode } from "html5-qrcode";
 
 interface QrScannerProps {
   onScan: (result: string) => void;
@@ -11,65 +11,94 @@ interface QrScannerProps {
 
 export default function QrScanner({ onScan, onError, active = true }: QrScannerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const scannerRef = useRef<any>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
   const [status, setStatus] = useState<"idle" | "starting" | "active" | "error">("idle");
 
   useEffect(() => {
     if (!active) {
       if (scannerRef.current) {
-        scannerRef.current.clear().catch(() => {});
+        const scanner = scannerRef.current;
         scannerRef.current = null;
+        if (scanner.isScanning) {
+          scanner.stop()
+            .then(() => {
+              scanner.clear();
+            })
+            .catch(() => {});
+        }
         setStatus("idle");
       }
       return;
     }
 
-    let stopped = false;
+    let isMounted = true;
+    let html5QrCode: Html5Qrcode | null = null;
 
-    const startScanner = () => {
+    const startScanner = async () => {
       try {
         setStatus("starting");
+        
+        // Brief timeout to ensure the container element is fully rendered and sized
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        
+        if (!isMounted || !containerRef.current) return;
 
-        if (stopped || !containerRef.current) return;
+        html5QrCode = new Html5Qrcode("qr-scanner-container");
+        scannerRef.current = html5QrCode;
 
-        const scanner = new Html5QrcodeScanner(
-          "qr-scanner-container",
+        await html5QrCode.start(
+          { facingMode: "environment" },
           {
             fps: 10,
             qrbox: { width: 250, height: 250 },
             aspectRatio: 1.0,
-            showTorchButtonIfSupported: true,
           },
-          false
-        );
-
-        scanner.render(
           (decodedText: string) => {
-            onScan(decodedText);
+            if (isMounted) {
+              onScan(decodedText);
+            }
           },
-          (errorMessage: string) => {
-            // Ignore continuous scanning errors (not-found frames)
+          () => {
+            // Ignore verbose scanning noise/errors
           }
         );
 
-        scannerRef.current = scanner;
-        setStatus("active");
+        if (isMounted) {
+          setStatus("active");
+        } else {
+          if (html5QrCode.isScanning) {
+            html5QrCode.stop()
+              .then(() => {
+                html5QrCode?.clear();
+              })
+              .catch(() => {});
+          }
+        }
       } catch (err: any) {
-        setStatus("error");
-        onError?.(err.message || "Camera not available");
+        if (isMounted) {
+          setStatus("error");
+          onError?.(err?.message || err || "Camera not available");
+        }
       }
     };
 
     startScanner();
 
     return () => {
-      stopped = true;
+      isMounted = false;
       if (scannerRef.current) {
-        scannerRef.current.clear().catch(() => {});
+        const scanner = scannerRef.current;
         scannerRef.current = null;
+        if (scanner.isScanning) {
+          scanner.stop()
+            .then(() => {
+              scanner.clear();
+            })
+            .catch(() => {});
+        }
       }
     };
-  }, [active]);
+  }, [active, onScan, onError]);
 
   return (
     <div className="qr-scanner-wrapper">
@@ -84,6 +113,19 @@ export default function QrScanner({ onScan, onError, active = true }: QrScannerP
           <p>⚠️ Camera unavailable. Please allow camera access.</p>
         </div>
       )}
+      
+      {status === "active" && (
+        <div className="qr-scanner-viewfinder">
+          <div className="qr-scanner-viewfinder-box">
+            <div className="viewfinder-corner viewfinder-corner-tl" />
+            <div className="viewfinder-corner viewfinder-corner-tr" />
+            <div className="viewfinder-corner viewfinder-corner-bl" />
+            <div className="viewfinder-corner viewfinder-corner-br" />
+            <div className="viewfinder-laser" />
+          </div>
+        </div>
+      )}
+
       <div
         id="qr-scanner-container"
         ref={containerRef}
@@ -92,3 +134,4 @@ export default function QrScanner({ onScan, onError, active = true }: QrScannerP
     </div>
   );
 }
+

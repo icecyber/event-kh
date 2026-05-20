@@ -424,11 +424,129 @@ tr:hover td { background: var(--gray-50); }
 .step-col { display: flex; flex-direction: column; align-items: center; }
 
 /* ── QR Scanner ─────────────────────────────────────────────────── */
-.qr-scanner-wrapper { position: relative; border-radius: 1rem; overflow: hidden; background: var(--gray-900); min-height: 350px; }
-.qr-scanner-container { min-height: 350px; }
-.qr-scanner-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(15,23,42,0.8); color: #fff; gap: 1rem; }
-.qr-scanner-spinner { width: 2rem; height: 2rem; border: 3px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
-.qr-scanner-error { padding: 2rem; text-align: center; color: var(--rose-400); }
+.qr-scanner-wrapper {
+  position: relative;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: var(--gray-900);
+  min-height: 380px;
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
+}
+.qr-scanner-container {
+  min-height: 380px;
+}
+.qr-scanner-container video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 1rem;
+}
+.qr-scanner-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.85);
+  color: #fff;
+  gap: 1rem;
+  z-index: 15;
+}
+.qr-scanner-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid rgba(255,255,255,0.2);
+  border-top-color: var(--brand-500);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+.qr-scanner-error {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: var(--rose-400);
+  z-index: 15;
+}
+
+/* Premium QR Viewfinder Overlay Styles */
+.qr-scanner-viewfinder {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.qr-scanner-viewfinder-box {
+  position: relative;
+  width: 250px;
+  height: 250px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 1.25rem;
+  box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.65);
+  overflow: hidden;
+}
+.viewfinder-corner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border: 4px solid var(--brand-500);
+  pointer-events: none;
+}
+.viewfinder-corner-tl { top: 0; left: 0; border-right: none; border-bottom: none; border-top-left-radius: 0.75rem; }
+.viewfinder-corner-tr { top: 0; right: 0; border-left: none; border-bottom: none; border-top-right-radius: 0.75rem; }
+.viewfinder-corner-bl { bottom: 0; left: 0; border-right: none; border-top: none; border-bottom-left-radius: 0.75rem; }
+.viewfinder-corner-br { bottom: 0; right: 0; border-left: none; border-top: none; border-bottom-right-radius: 0.75rem; }
+
+.viewfinder-laser {
+  position: absolute;
+  left: 5%;
+  right: 5%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--brand-400), transparent);
+  box-shadow: 0 0 10px var(--brand-500), 0 0 3px #fff;
+  animation: scan 2.2s ease-in-out infinite;
+}
+@keyframes scan {
+  0%, 100% { top: 5%; }
+  50% { top: 95%; }
+}
+
+/* Polishing Html5Qrcode Injected Buttons and Select Elements */
+#qr-scanner-container button {
+  background: linear-gradient(135deg, var(--brand-600), var(--violet-600)) !important;
+  color: #fff !important;
+  border: none !important;
+  padding: 0.55rem 1.1rem !important;
+  border-radius: 0.5rem !important;
+  font-weight: 600 !important;
+  font-size: 0.85rem !important;
+  cursor: pointer !important;
+  margin-top: 0.65rem !important;
+  transition: all 0.2s !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3) !important;
+  text-decoration: none !important;
+}
+#qr-scanner-container button:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4) !important;
+}
+#qr-scanner-container select {
+  padding: 0.5rem 1rem !important;
+  border-radius: 0.5rem !important;
+  border: 1.5px solid var(--gray-200) !important;
+  background-color: #fff !important;
+  color: var(--gray-700) !important;
+  font-weight: 600 !important;
+  outline: none !important;
+  font-size: 0.85rem !important;
+  margin-right: 0.5rem !important;
+  cursor: pointer !important;
+}
+#html5-qrcode-anchor-scan-type-change {
+  display: none !important;
+}
 
 /* ── Modal ──────────────────────────────────────────────────────── */
 .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 1rem; }
