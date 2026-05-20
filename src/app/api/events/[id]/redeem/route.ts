@@ -20,7 +20,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { qrCodeString, registrationId } = await req.json();
+  const { qrCodeString, registrationId, lookupOnly } = await req.json();
 
   // Find registration by QR string or by ID
   const where = qrCodeString
@@ -37,6 +37,18 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 
   if (!registration) {
     return Response.json({ error: "Registration not found" }, { status: 404 });
+  }
+
+  if (lookupOnly) {
+    const attendee = registration.attendee || {
+      id: null,
+      name: registration.guestName,
+      email: registration.guestEmail || registration.guestPhone,
+    };
+    return Response.json({
+      ...registration,
+      attendee,
+    });
   }
 
   if (registration.checkedInAt) {
