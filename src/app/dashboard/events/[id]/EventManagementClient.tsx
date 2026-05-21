@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import ParticipantsTab from "./ParticipantsTab";
 import RedeemTab from "./RedeemTab";
+import EditEventForm from "./EditEventForm";
 
 interface EventData {
   id: string;
@@ -224,9 +225,12 @@ export default function EventManagementClient({ event }: { event: EventData }) {
         {activeTab === "Redeem" && <RedeemTab eventId={event.id} />}
 
         {activeTab === "Settings" && (
-          <div className="card card-body" style={{ maxWidth: 560 }}>
-            <h3 style={{ marginBottom: "1.5rem", color: "var(--gray-900)" }}>Event Settings</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div style={{ maxWidth: 680 }}>
+            <h3 style={{ marginBottom: "1.5rem", color: "var(--gray-900)" }}>⚙️ Edit Event</h3>
+
+            <EditEventForm event={event} />
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "2rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", border: "1.5px solid var(--gray-200)", borderRadius: "0.75rem" }}>
                 <div>
                   <p style={{ fontWeight: 600, color: "var(--gray-800)" }}>

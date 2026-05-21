@@ -37,23 +37,25 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   }
 
   const body = await req.json();
+
+  const data: Record<string, unknown> = {};
+  if (body.title !== undefined) data.title = body.title;
+  if (body.description !== undefined) data.description = body.description || null;
+  if (body.date !== undefined) data.date = new Date(body.date);
+  if (body.endDate !== undefined) data.endDate = body.endDate ? new Date(body.endDate) : null;
+  if (body.startTime !== undefined) data.startTime = body.startTime || null;
+  if (body.endTime !== undefined) data.endTime = body.endTime || null;
+  if (body.location !== undefined) data.location = body.location || null;
+  if (body.capacity !== undefined) data.capacity = body.capacity != null ? Number(body.capacity) : null;
+  if (body.bannerImageURL !== undefined) data.bannerImageURL = body.bannerImageURL || null;
+  if (body.badgeBackgroundURL !== undefined) data.badgeBackgroundURL = body.badgeBackgroundURL || null;
+  if (body.badgeEnabled !== undefined) data.badgeEnabled = Boolean(body.badgeEnabled);
+  if (body.badgeSize !== undefined) data.badgeSize = body.badgeSize;
+  if (body.badgeOrientation !== undefined) data.badgeOrientation = body.badgeOrientation;
+
   const updated = await prisma.event.update({
     where: { id },
-    data: {
-      title: body.title,
-      description: body.description,
-      date: body.date ? new Date(body.date) : undefined,
-      endDate: body.endDate !== undefined ? (body.endDate ? new Date(body.endDate) : null) : undefined,
-      startTime: body.startTime,
-      endTime: body.endTime,
-      location: body.location,
-      capacity: body.capacity != null ? Number(body.capacity) : undefined,
-      bannerImageURL: body.bannerImageURL,
-      badgeBackgroundURL: body.badgeBackgroundURL,
-      badgeEnabled: body.badgeEnabled !== undefined ? Boolean(body.badgeEnabled) : undefined,
-      badgeSize: body.badgeSize,
-      badgeOrientation: body.badgeOrientation,
-    },
+    data,
   });
 
   return Response.json(updated);

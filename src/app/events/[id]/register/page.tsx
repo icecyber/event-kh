@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import RegistrationForm from "./RegistrationForm";
+import { RegisterPageHeader, RegisterFormTitle } from "./RegisterPageClient";
 
 export const metadata = { title: "Register — EventKH" };
 
@@ -21,10 +22,8 @@ export default async function RegisterPage({ params }: { params: Promise<{ id: s
 
   if (!event) notFound();
 
-  // If not Exhibition, user must be logged in
-  if (event.eventType !== "EXHIBITION" && !session) {
-    redirect(`/login?callbackUrl=/events/${id}/register`);
-  }
+  // All event types allow guest registration — no login wall
+  // (Standard requires Name+Email, Exhibition requires Name+Phone)
 
   // Already registered? Only check if logged in
   let existing = null;
@@ -53,19 +52,17 @@ export default async function RegisterPage({ params }: { params: Promise<{ id: s
         </div>
 
         {/* Event summary card */}
-        <div className="card card-body" style={{ marginBottom: "1.5rem", background: "linear-gradient(135deg, var(--brand-900), #4c1d95)", color: "#fff" }}>
-          <p style={{ fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.55)", marginBottom: "0.5rem" }}>Registering for</p>
-          <h2 style={{ fontSize: "1.35rem", marginBottom: "0.75rem" }}>{event.title}</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", fontSize: "0.875rem", color: "rgba(255,255,255,0.7)" }}>
-            <span>📅 {dateStr}{event.startTime ? ` · ${event.startTime}` : ""}</span>
-            {event.location && <span>📍 {event.location}</span>}
-            <span>👤 Registering as <strong style={{ color: "#fff" }}>{session ? session.user.name : "Guest Attendee"}</strong></span>
-          </div>
-        </div>
+        <RegisterPageHeader
+          eventTitle={event.title}
+          dateStr={dateStr}
+          startTime={event.startTime}
+          location={event.location}
+          userName={session?.user?.name}
+        />
 
         {/* Registration form */}
         <div className="card card-body">
-          <h3 style={{ marginBottom: "1.5rem", color: "var(--gray-900)" }}>Complete your registration</h3>
+          <RegisterFormTitle />
           <RegistrationForm eventData={{
             id: event.id,
             title: event.title,
@@ -88,3 +85,4 @@ export default async function RegisterPage({ params }: { params: Promise<{ id: s
     </main>
   );
 }
+

@@ -28,6 +28,7 @@ export default function ParticipantsTab({
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [redeemingId, setRedeemingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Debounce search
   useEffect(() => {
@@ -77,6 +78,18 @@ export default function ParticipantsTab({
     a.click();
     URL.revokeObjectURL(url);
     await fetchParticipants();
+  };
+
+  const handleDelete = async (reg: Participant) => {
+    if (!confirm(`Remove ${reg.attendee?.name || reg.guestName || "this participant"}? This cannot be undone.`)) return;
+    setDeletingId(reg.id);
+    try {
+      const res = await fetch(`/api/events/${eventId}/registrations/${reg.id}`, { method: "DELETE" });
+      if (!res.ok) { alert("Delete failed"); return; }
+      await fetchParticipants();
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const handleExportCSV = () => {
@@ -183,6 +196,14 @@ export default function ParticipantsTab({
                           title="Download badge"
                         >
                           🎫 Badge
+                        </button>
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleDelete(p)}
+                          disabled={deletingId === p.id}
+                          title="Delete registration"
+                        >
+                          {deletingId === p.id ? <span className="spinner" /> : "🗑️"}
                         </button>
                       </div>
                     </td>

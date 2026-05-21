@@ -36,3 +36,26 @@ export async function GET(req: NextRequest, { params }: Ctx) {
 
   return Response.json(registration);
 }
+
+// DELETE /api/events/[id]/registrations/[regId]
+export async function DELETE(req: NextRequest, { params }: Ctx) {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== "ORGANIZER") {
+    return Response.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { id: eventId, regId } = await params;
+
+  const registration = await prisma.registration.findUnique({
+    where: { id: regId },
+    include: { event: { select: { organizerId: true } } },
+  });
+
+  if (!registration) return Response.json({ error: "Not found" }, { status: 404 });
+  if (registration.event.organizerId !== session.user.id) {
+    return Response.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  await prisma.registration.delete({ where: { id: regId } });
+  return Response.json({ success: true });
+}

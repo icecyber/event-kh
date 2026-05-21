@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useLang } from "@/components/LangProvider";
 
 interface CustomField {
   id: string;
@@ -33,9 +34,10 @@ interface EventData {
 export default function RegistrationForm({ eventData }: { eventData: EventData }) {
   const router = useRouter();
   const { data: session } = useSession();
+  const { t } = useLang();
 
   const isExhibition = eventData.eventType === "EXHIBITION";
-  const isGuest = isExhibition && !session;
+  const isGuest = !session; // all event types support guest registration
 
   const [selectedTicket, setSelectedTicket] = useState(eventData.ticketTypes[0]?.id ?? "");
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -122,20 +124,20 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
       }}>
         <div>
           <h4 style={{ fontSize: "1rem", fontWeight: 600, color: "var(--gray-900)", margin: 0, marginBottom: "0.25rem" }}>
-            Your Details
+            {t("reg.yourDetails")}
           </h4>
           <p style={{ fontSize: "0.85rem", color: "var(--gray-500)", margin: 0 }}>
             {isExhibition
-              ? "No account needed! Just fill in your name and phone number."
+              ? t("reg.noAccountNeeded")
               : session
-                ? "We've pre-filled your info from your account. Feel free to update it."
-                : "Please enter your contact details to register."
+                ? t("reg.preFilled")
+                : t("reg.enterDetails")
             }
           </p>
         </div>
 
         <div className="form-group" style={{ margin: 0 }}>
-          <label className="form-label" style={{ fontWeight: 600 }}>Full Name <span className="req">*</span></label>
+          <label className="form-label" style={{ fontWeight: 600 }}>{t("reg.fullName")} <span className="req">*</span></label>
           <input
             type="text"
             className="form-input"
@@ -150,7 +152,7 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
         {isExhibition && (
           <>
             <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label" style={{ fontWeight: 600 }}>Phone Number <span className="req">*</span></label>
+              <label className="form-label" style={{ fontWeight: 600 }}>{t("reg.phoneNumber")} <span className="req">*</span></label>
               <input
                 type="tel"
                 className="form-input"
@@ -162,7 +164,7 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
             </div>
             <div className="form-group" style={{ margin: 0 }}>
               <label className="form-label" style={{ fontWeight: 600 }}>
-                Email Address <span style={{ fontWeight: 400, color: "var(--gray-400)" }}>(Optional)</span>
+                {t("reg.emailAddress")} <span style={{ fontWeight: 400, color: "var(--gray-400)" }}>({t("common.optional")})</span>
               </label>
               <input
                 type="email"
@@ -179,7 +181,7 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
         {!isExhibition && (
           <>
             <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label" style={{ fontWeight: 600 }}>Email Address <span className="req">*</span></label>
+              <label className="form-label" style={{ fontWeight: 600 }}>{t("reg.emailAddress")} <span className="req">*</span></label>
               <input
                 type="email"
                 className="form-input"
@@ -191,7 +193,7 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
             </div>
             <div className="form-group" style={{ margin: 0 }}>
               <label className="form-label" style={{ fontWeight: 600 }}>
-                Phone Number <span style={{ fontWeight: 400, color: "var(--gray-400)" }}>(Optional)</span>
+                {t("reg.phoneNumber")} <span style={{ fontWeight: 400, color: "var(--gray-400)" }}>({t("common.optional")})</span>
               </label>
               <input
                 type="tel"
@@ -208,7 +210,7 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
       {/* Ticket selection */}
       {eventData.ticketTypes.length > 1 && (
         <div className="form-group">
-          <label className="form-label">Select Ticket Type <span className="req">*</span></label>
+          <label className="form-label">{t("reg.selectTicket")} <span className="req">*</span></label>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             {eventData.ticketTypes.map((ticket) => (
               <label key={ticket.id} style={{
@@ -228,7 +230,7 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 600, color: "var(--gray-800)" }}>{ticket.name}</div>
                 </div>
-                <span className="badge badge-green">{ticket.price === 0 ? "Free" : `$${ticket.price}`}</span>
+                <span className="badge badge-green">{ticket.price === 0 ? t("events.free") : `$${ticket.price}`}</span>
               </label>
             ))}
           </div>
@@ -311,9 +313,9 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
           disabled={submitting}
         >
           {submitting ? (
-            <><span className="spinner" /> Registering…</>
+            <><span className="spinner" /> {t("reg.registering")}</>
           ) : (
-            "Complete Registration →"
+            t("reg.completeBtn")
           )}
         </button>
       </div>

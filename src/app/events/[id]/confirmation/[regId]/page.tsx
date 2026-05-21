@@ -28,16 +28,16 @@ export default async function ConfirmationPage({
 
   if (!registration) notFound();
 
-  // If standard event, user must be authenticated and own the registration
-  const isGuestAllowed = registration.event.eventType === "EXHIBITION";
-  if (!isGuestAllowed && !session) {
-    redirect(`/login?callbackUrl=/events/${eventId}/confirmation/${regId}`);
-  }
-
-  // Access control for standard events
-  if (!isGuestAllowed) {
-    const isOwner = session && registration.attendeeId === session.user.id;
-    const isOrganizer = session &&
+  // Access control:
+  // - Guest registrations (no attendeeId) are accessible to anyone with the URL
+  // - Authenticated registrations require the owner or the event organizer
+  const isGuestRegistration = !registration.attendeeId;
+  if (!isGuestRegistration) {
+    if (!session) {
+      redirect(`/login?callbackUrl=/events/${eventId}/confirmation/${regId}`);
+    }
+    const isOwner = registration.attendeeId === session.user.id;
+    const isOrganizer =
       session.user.role === "ORGANIZER" &&
       registration.event.organizerId === session.user.id;
     if (!isOwner && !isOrganizer) redirect("/dashboard");

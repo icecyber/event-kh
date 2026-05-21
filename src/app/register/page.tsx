@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useLang } from "@/components/LangProvider";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { t } = useLang();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,15 +23,8 @@ export default function RegisterPage() {
     try {
       const res = await fetch("/api/register", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-          role,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password, role }),
       });
 
       if (res.ok) {
@@ -50,15 +45,15 @@ export default function RegisterPage() {
       <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-100">
         <div>
           <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-            Create a new account
+            {t("auth.createAccountTitle")}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Already have an account?{" "}
+            {t("auth.alreadyHaveAccount")}{" "}
             <Link
               href="/login"
               className="font-medium text-blue-600 hover:text-blue-500"
             >
-              Sign in
+              {t("auth.signIn")}
             </Link>
           </p>
         </div>
@@ -70,20 +65,20 @@ export default function RegisterPage() {
           )}
           <div className="space-y-4 rounded-md shadow-sm">
             <div>
-              <label className="sr-only">Full Name</label>
+              <label className="sr-only">{t("auth.fullNamePlaceholder")}</label>
               <input
                 id="name"
                 name="name"
                 type="text"
                 required
                 className="relative block w-full rounded-md border-0 py-2.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                placeholder="Full Name"
+                placeholder={t("auth.fullNamePlaceholder")}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
             </div>
             <div>
-              <label className="sr-only">Email address</label>
+              <label className="sr-only">{t("auth.emailPlaceholder")}</label>
               <input
                 id="email-address"
                 name="email"
@@ -91,13 +86,13 @@ export default function RegisterPage() {
                 autoComplete="email"
                 required
                 className="relative block w-full rounded-md border-0 py-2.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                placeholder="Email address"
+                placeholder={t("auth.emailPlaceholder")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div>
-              <label className="sr-only">Password</label>
+              <label className="sr-only">{t("auth.passwordPlaceholder")}</label>
               <input
                 id="password"
                 name="password"
@@ -105,20 +100,20 @@ export default function RegisterPage() {
                 autoComplete="new-password"
                 required
                 className="relative block w-full rounded-md border-0 py-2.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                placeholder="Password"
+                placeholder={t("auth.passwordPlaceholder")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">I am a:</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("auth.iAmA")}</label>
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
                 className="relative block w-full rounded-md border-0 py-2.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
               >
-                <option value="ATTENDEE">Attendee</option>
-                <option value="ORGANIZER">Event Organizer</option>
+                <option value="ATTENDEE">{t("auth.attendee")}</option>
+                <option value="ORGANIZER">{t("auth.organizer")}</option>
               </select>
             </div>
           </div>
@@ -129,7 +124,7 @@ export default function RegisterPage() {
               disabled={loading}
               className="group relative flex w-full justify-center rounded-md bg-blue-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50"
             >
-              {loading ? "Registering..." : "Register"}
+              {loading ? t("auth.registering") : t("auth.registerBtn")}
             </button>
           </div>
         </form>

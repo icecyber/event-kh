@@ -20,11 +20,10 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 
   const session = await getServerSession(authOptions);
   const isExhibition = event.eventType === "EXHIBITION";
-  const isGuest = isExhibition && !session;
+  // All event types support guest registration — no login required
+  const isGuest = !session;
 
-  if (!session && !isGuest) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  // (No 401 block — open registration for all published events)
 
   const body = await req.json();
   const { ticketTypeId, answers, guestName, guestPhone, guestEmail } = body as {
@@ -58,12 +57,21 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     if (existing) {
       return Response.json({ error: "Already registered", registrationId: existing.id }, { status: 409 });
     }
-  } else if (isGuest && guestPhone) {
+  } else if (isExhibition && guestPhone) {
+    // Exhibition guests: deduplicate by phone
     const existing = await prisma.registration.findFirst({
       where: { eventId, guestPhone: guestPhone.trim() },
     });
     if (existing) {
-      return Response.json({ error: "This phone number is already registered for this event." }, { status: 409 });
+      return Response.json({ error: "This phone number is already registered for this event.", registrationId: existing.id }, { status: 409 });
+    }
+  } else if (!isExhibition && guestEmail) {
+    // Standard guests: deduplicate by email
+    const existing = await prisma.registration.findFirst({
+      where: { eventId, guestEmail: guestEmail.trim() },
+    });
+    if (existing) {
+      return Response.json({ error: "This email address is already registered for this event.", registrationId: existing.id }, { status: 409 });
     }
   }
 
