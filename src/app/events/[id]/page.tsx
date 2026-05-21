@@ -37,16 +37,23 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
     });
   }
 
-  const dateStr = new Date(event.date).toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  // Build date display — supports multi-day events
+  const fmtDate = (d: Date) =>
+    d.toLocaleDateString("en-US", {
+      weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: "UTC",
+    });
+
+  const startDateStr = fmtDate(event.date);
+  const endDateStr = event.endDate ? fmtDate(event.endDate) : null;
+  const dateDisplay = endDateStr && endDateStr !== startDateStr
+    ? `${startDateStr} – ${endDateStr}`
+    : startDateStr;
 
   const spotsLeft = event.capacity
     ? event.capacity - event._count.registrations
     : null;
+
+  const isExhibition = event.eventType === "EXHIBITION";
 
   return (
     <main style={{ minHeight: "calc(100vh - 64px)" }}>
@@ -62,6 +69,22 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
           }}>🎪</div>
         )}
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.7), transparent)" }} />
+        {/* Event type pill */}
+        <div style={{ position: "absolute", top: "1.25rem", right: "1.5rem" }}>
+          {isExhibition ? (
+            <span style={{
+              background: "rgba(16,185,129,0.9)", color: "#fff", fontWeight: 700,
+              fontSize: "0.75rem", padding: "0.3rem 0.85rem", borderRadius: 999,
+              backdropFilter: "blur(8px)", letterSpacing: "0.04em"
+            }}>🎪 Exhibition</span>
+          ) : (
+            <span style={{
+              background: "rgba(99,102,241,0.85)", color: "#fff", fontWeight: 700,
+              fontSize: "0.75rem", padding: "0.3rem 0.85rem", borderRadius: 999,
+              backdropFilter: "blur(8px)", letterSpacing: "0.04em"
+            }}>📅 Standard</span>
+          )}
+        </div>
         <div className="container" style={{ position: "absolute", bottom: "1.5rem", left: "50%", transform: "translateX(-50%)", color: "#fff" }}>
           <h1 style={{ fontSize: "clamp(1.5rem, 4vw, 2.5rem)" }}>{event.title}</h1>
         </div>
@@ -77,27 +100,38 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             </div>
           )}
 
-          {/* Custom fields preview */}
-          {event.customFields.length > 0 && (
-            <div className="card card-body">
-              <h3 style={{ marginBottom: "0.75rem", color: "var(--gray-900)" }}>Registration requires</h3>
-              <ul style={{ display: "flex", flexDirection: "column", gap: "0.5rem", paddingLeft: "1.25rem", color: "var(--gray-600)" }}>
-                {event.customFields.map((f) => (
-                  <li key={f.id}>{f.label}{f.required ? " *" : ""}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {/* Registration required fields preview */}
+          <div className="card card-body">
+            <h3 style={{ marginBottom: "0.75rem", color: "var(--gray-900)" }}>
+              {isExhibition ? "📋 Registration requires" : "📋 What you need to register"}
+            </h3>
+            <ul style={{ display: "flex", flexDirection: "column", gap: "0.4rem", paddingLeft: "1.25rem", color: "var(--gray-600)" }}>
+              <li>Full Name *</li>
+              {isExhibition
+                ? <li>Phone Number *</li>
+                : <li>Email Address *</li>
+              }
+              {isExhibition && <li style={{ color: "var(--gray-400)" }}>Email Address (optional)</li>}
+              {!isExhibition && <li style={{ color: "var(--gray-400)" }}>Phone Number (optional)</li>}
+              {event.customFields.map((f) => (
+                <li key={f.id}>{f.label}{f.required ? " *" : " (optional)"}</li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         {/* Right: registration card */}
         <div className="card" style={{ position: "sticky", top: 80 }}>
           <div className="card-body" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--gray-600)", fontSize: "0.9rem" }}>
-                <span>📅</span> {dateStr}
-                {event.startTime && ` · ${event.startTime}`}
-                {event.endTime && ` – ${event.endTime}`}
+              {/* Date(s) */}
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem", color: "var(--gray-600)", fontSize: "0.9rem" }}>
+                <span style={{ flexShrink: 0, marginTop: "0.1rem" }}>📅</span>
+                <span>
+                  {dateDisplay}
+                  {event.startTime && ` · ${event.startTime}`}
+                  {event.endTime && ` – ${event.endTime}`}
+                </span>
               </div>
               {event.location && (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--gray-600)", fontSize: "0.9rem" }}>
@@ -140,17 +174,28 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
               </div>
             ) : spotsLeft === 0 ? (
               <div className="alert alert-error">🚫 This event is full.</div>
-            ) : session || event.eventType === "EXHIBITION" ? (
-              <Link href={`/events/${id}/register`} className="btn btn-primary" style={{ width: "100%", justifyContent: "center" }} id="register-btn">
-                {event.eventType === "EXHIBITION" ? "Register Now (No Login Required) →" : "Register Now →"}
-              </Link>
             ) : (
-              <div>
-                <p style={{ fontSize: "0.85rem", color: "var(--gray-500)", marginBottom: "0.75rem", textAlign: "center" }}>Sign in to register for this event.</p>
-                <Link href={`/login?callbackUrl=/events/${id}/register`} className="btn btn-primary" style={{ width: "100%", justifyContent: "center" }}>
-                  Sign in to Register
-                </Link>
-              </div>
+              // Both Standard and Exhibition events show Register Now — Standard just requires login to complete
+              <Link
+                href={isExhibition ? `/events/${id}/register` : (session ? `/events/${id}/register` : `/login?callbackUrl=/events/${id}/register`)}
+                className="btn btn-primary"
+                style={{ width: "100%", justifyContent: "center" }}
+                id="register-btn"
+              >
+                {isExhibition
+                  ? "Register Now — No Login Required →"
+                  : session
+                    ? "Register Now →"
+                    : "Sign in to Register →"
+                }
+              </Link>
+            )}
+
+            {/* Exhibition friction-free note */}
+            {isExhibition && !existingReg && spotsLeft !== 0 && (
+              <p style={{ fontSize: "0.78rem", color: "var(--gray-400)", textAlign: "center", marginTop: "-0.25rem" }}>
+                ✨ No account needed — just your name & phone number
+              </p>
             )}
           </div>
         </div>

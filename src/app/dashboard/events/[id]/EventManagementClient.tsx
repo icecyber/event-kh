@@ -10,12 +10,17 @@ interface EventData {
   title: string;
   description?: string | null;
   date: string;
+  endDate?: string | null;
   startTime?: string | null;
   endTime?: string | null;
   location?: string | null;
   capacity?: number | null;
   bannerImageURL?: string | null;
   badgeBackgroundURL?: string | null;
+  badgeEnabled: boolean;
+  badgeSize: string;
+  badgeOrientation: string;
+  eventType: string;
   isPublished: boolean;
   totalRegistrations: number;
   checkedIn: number;
@@ -47,9 +52,14 @@ export default function EventManagementClient({ event }: { event: EventData }) {
     }
   };
 
-  const dateStr = new Date(event.date).toLocaleDateString("en-US", {
+  const fmtDate = (d: string) => new Date(d).toLocaleDateString("en-US", {
     weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: "UTC"
   });
+  const startDateStr = fmtDate(event.date);
+  const endDateStr = event.endDate ? fmtDate(event.endDate) : null;
+  const dateDisplay = endDateStr && endDateStr !== startDateStr
+    ? `${startDateStr} – ${endDateStr}`
+    : startDateStr;
 
   return (
     <div className="dash-layout">
@@ -80,7 +90,7 @@ export default function EventManagementClient({ event }: { event: EventData }) {
             </div>
             <h1 className="page-title" style={{ fontSize: "1.5rem" }}>{event.title}</h1>
             <p className="page-subtitle">
-              📅 {dateStr}{event.startTime ? ` · ${event.startTime}` : ""}
+              📅 {dateDisplay}{event.startTime ? ` · ${event.startTime}` : ""}{event.endTime ? ` – ${event.endTime}` : ""}
               {event.location ? ` · 📍 ${event.location}` : ""}
             </p>
           </div>
@@ -155,7 +165,8 @@ export default function EventManagementClient({ event }: { event: EventData }) {
                 {event.description && (
                   <div><dt style={dtStyle}>Description</dt><dd style={{ color: "var(--gray-600)", fontSize: "0.9rem" }}>{event.description}</dd></div>
                 )}
-                <div><dt style={dtStyle}>Date</dt><dd>{dateStr}</dd></div>
+                <div><dt style={dtStyle}>Event Type</dt><dd><span className={`badge ${event.eventType === "EXHIBITION" ? "badge-green" : "badge-blue"}`}>{event.eventType === "EXHIBITION" ? "🎪 Exhibition" : "📅 Standard"}</span></dd></div>
+                <div><dt style={dtStyle}>Date</dt><dd>{dateDisplay}</dd></div>
                 {event.startTime && <div><dt style={dtStyle}>Time</dt><dd>{event.startTime}{event.endTime ? ` – ${event.endTime}` : ""}</dd></div>}
                 {event.location && <div><dt style={dtStyle}>Location</dt><dd>{event.location}</dd></div>}
                 <div><dt style={dtStyle}>Capacity</dt><dd>{event.capacity ?? "Unlimited"}</dd></div>
@@ -167,9 +178,15 @@ export default function EventManagementClient({ event }: { event: EventData }) {
                     ))}
                   </dd>
                 </div>
-                {event.badgeBackgroundURL && (
-                  <div><dt style={dtStyle}>Badge Background</dt><dd><span className="badge badge-green">Custom image set</span></dd></div>
-                )}
+                <div>
+                  <dt style={dtStyle}>Badge Config</dt>
+                  <dd style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", alignItems: "center" }}>
+                    {event.badgeEnabled
+                      ? <><span className="badge badge-green">Custom BG</span><span className="badge badge-purple">{event.badgeSize}</span><span className="badge badge-blue" style={{ textTransform: "capitalize" }}>{event.badgeOrientation}</span></>
+                      : <span className="badge badge-gray">Default gradient</span>
+                    }
+                  </dd>
+                </div>
               </dl>
             </div>
 

@@ -33,8 +33,12 @@ model Event {
   capacity           Int?
   bannerImageURL     String?
   badgeBackgroundURL String?
+  badgeEnabled       Boolean  @default(true)
+  badgeSize          String   @default("3*4")        // A3 | 2*3 | 3*4
+  badgeOrientation   String   @default("vertical")   // horizontal | vertical
   isPublished        Boolean  @default(false)
   eventType          String   @default("STANDARD") // STANDARD or EXHIBITION
+  endDate            DateTime?
   organizerId        String
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 interface TicketTypeInput { name: string; price: number; quantityAvailable: string; }
@@ -15,6 +15,69 @@ const FIELD_TYPES = [
   { value: "number", label: "Number" },
 ];
 
+const BADGE_SIZES = ["A3", "2*3", "3*4"];
+
+// Reusable inline upload widget
+function ImageUploadInput({
+  label, hint, value, onChange,
+}: { label: string; hint?: string; value: string; onChange: (url: string) => void }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadErr, setUploadErr] = useState("");
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadErr("");
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) { setUploadErr(data.error || "Upload failed"); return; }
+      onChange(data.url);
+    } catch {
+      setUploadErr("Network error during upload.");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  return (
+    <div className="form-group">
+      <label className="form-label">{label}</label>
+      <div style={{ display: "flex", gap: "0.5rem", alignItems: "stretch" }}>
+        <input
+          type="url"
+          className="form-input"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="https://… or upload below"
+          style={{ flex: 1 }}
+        />
+        <label style={{
+          display: "inline-flex", alignItems: "center", gap: "0.4rem",
+          padding: "0 1rem", borderRadius: "0.5rem", cursor: uploading ? "not-allowed" : "pointer",
+          background: "var(--brand-600)", color: "#fff", fontSize: "0.85rem", fontWeight: 600,
+          opacity: uploading ? 0.65 : 1, whiteSpace: "nowrap", flexShrink: 0,
+        }}>
+          {uploading ? <><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Uploading…</> : "📁 Upload"}
+          <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleFile} disabled={uploading} />
+        </label>
+      </div>
+      {uploadErr && <p style={{ fontSize: "0.8rem", color: "var(--rose-500)", marginTop: "0.25rem" }}>{uploadErr}</p>}
+      {value && (
+        <div style={{ marginTop: "0.5rem", borderRadius: "0.5rem", overflow: "hidden", maxHeight: 120, border: "1px solid var(--gray-200)" }}>
+          <img src={value} alt="Preview" style={{ width: "100%", height: 120, objectFit: "cover" }} onError={(e) => (e.currentTarget.style.display = "none")} />
+        </div>
+      )}
+      {hint && <span className="form-hint">{hint}</span>}
+    </div>
+  );
+}
+
 export default function CreateEventPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -25,14 +88,17 @@ export default function CreateEventPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [location, setLocation] = useState("");
   const [capacity, setCapacity] = useState("");
   const [bannerImageURL, setBannerImageURL] = useState("");
   const [badgeBackgroundURL, setBadgeBackgroundURL] = useState("");
+  const [badgeEnabled, setBadgeEnabled] = useState(true);
+  const [badgeSize, setBadgeSize] = useState("3*4");
+  const [badgeOrientation, setBadgeOrientation] = useState<"horizontal" | "vertical">("vertical");
   const [eventType, setEventType] = useState("STANDARD");
-
 
   // Step 2: Tickets
   const [tickets, setTickets] = useState<TicketTypeInput[]>([
@@ -73,12 +139,16 @@ export default function CreateEventPage() {
         title,
         description: description || undefined,
         date,
+        endDate: endDate || undefined,
         startTime: startTime || undefined,
         endTime: endTime || undefined,
         location: location || undefined,
         capacity: capacity ? Number(capacity) : undefined,
         bannerImageURL: bannerImageURL || undefined,
         badgeBackgroundURL: badgeBackgroundURL || undefined,
+        badgeEnabled,
+        badgeSize,
+        badgeOrientation,
         eventType,
         ticketTypes: tickets.map((t) => ({
           name: t.name,
@@ -112,6 +182,15 @@ export default function CreateEventPage() {
       setSubmitting(false);
     }
   };
+
+  const toggleStyle = (active: boolean): React.CSSProperties => ({
+    display: "inline-flex", alignItems: "center", justifyContent: "center",
+    padding: "0.5rem 1.25rem", borderRadius: "0.5rem", cursor: "pointer", fontWeight: 600,
+    fontSize: "0.875rem", transition: "all 0.15s",
+    background: active ? "var(--brand-600)" : "var(--gray-100)",
+    color: active ? "#fff" : "var(--gray-600)",
+    border: `2px solid ${active ? "var(--brand-600)" : "var(--gray-200)"}`,
+  });
 
   return (
     <div className="dash-layout">
@@ -147,10 +226,11 @@ export default function CreateEventPage() {
           ))}
         </div>
 
-        <div className="card card-body" style={{ maxWidth: 680 }}>
+        <div className="card card-body" style={{ maxWidth: 720 }}>
           {/* Step 0: Basic Info */}
           {step === 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+              {/* Event Type */}
               <div className="form-group">
                 <label className="form-label">Event Type <span className="req">*</span></label>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
@@ -164,7 +244,7 @@ export default function CreateEventPage() {
                       <input type="radio" name="eventType" value="STANDARD" checked={eventType === "STANDARD"} onChange={() => setEventType("STANDARD")} style={{ accentColor: "var(--brand-600)" }} />
                       <strong style={{ color: "var(--gray-800)" }}>📅 Standard Event</strong>
                     </div>
-                    <span style={{ fontSize: "0.8rem", color: "var(--gray-500)", marginLeft: "1.5rem" }}>Requires attendees to log in. Best for workshops, panels.</span>
+                    <span style={{ fontSize: "0.8rem", color: "var(--gray-500)", marginLeft: "1.5rem" }}>Requires attendees to provide name & email. Best for workshops, panels.</span>
                   </label>
                   <label style={{
                     display: "flex", flexDirection: "column", gap: "0.25rem", padding: "1rem",
@@ -176,26 +256,32 @@ export default function CreateEventPage() {
                       <input type="radio" name="eventType" value="EXHIBITION" checked={eventType === "EXHIBITION"} onChange={() => setEventType("EXHIBITION")} style={{ accentColor: "var(--brand-600)" }} />
                       <strong style={{ color: "var(--gray-800)" }}>🎪 Exhibition</strong>
                     </div>
-                    <span style={{ fontSize: "0.8rem", color: "var(--gray-500)", marginLeft: "1.5rem" }}>Zero friction! Attendees register using just Name + Phone without signing in.</span>
+                    <span style={{ fontSize: "0.8rem", color: "var(--gray-500)", marginLeft: "1.5rem" }}>Zero friction! Name + Phone only — no account needed.</span>
                   </label>
                 </div>
               </div>
+
+              {/* Title */}
               <div className="form-group">
                 <label className="form-label">Event Title <span className="req">*</span></label>
                 <input className="form-input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Tech Summit 2026" required />
               </div>
+
+              {/* Description */}
               <div className="form-group">
                 <label className="form-label">Description</label>
                 <textarea className="form-textarea" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What's this event about?" />
               </div>
+
+              {/* Start & End Dates */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div className="form-group">
-                  <label className="form-label">Date <span className="req">*</span></label>
+                  <label className="form-label">Start Date <span className="req">*</span></label>
                   <input type="date" className="form-input" value={date} onChange={(e) => setDate(e.target.value)} required />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Location</label>
-                  <input className="form-input" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Venue or Online" />
+                  <label className="form-label">End Date <span style={{ fontWeight: 400, color: "var(--gray-400)" }}>(Optional)</span></label>
+                  <input type="date" className="form-input" value={endDate} onChange={(e) => setEndDate(e.target.value)} min={date || undefined} />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Start Time</label>
@@ -206,19 +292,98 @@ export default function CreateEventPage() {
                   <input type="time" className="form-input" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
                 </div>
               </div>
-              <div className="form-group">
-                <label className="form-label">Capacity</label>
-                <input type="number" className="form-input" value={capacity} onChange={(e) => setCapacity(e.target.value)} placeholder="Leave blank for unlimited" min={1} />
+
+              {/* Location & Capacity */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div className="form-group">
+                  <label className="form-label">Location</label>
+                  <input className="form-input" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Venue or Online" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Capacity</label>
+                  <input type="number" className="form-input" value={capacity} onChange={(e) => setCapacity(e.target.value)} placeholder="Unlimited" min={1} />
+                </div>
               </div>
-              <div className="form-group">
-                <label className="form-label">Banner Image URL</label>
-                <input type="url" className="form-input" value={bannerImageURL} onChange={(e) => setBannerImageURL(e.target.value)} placeholder="https://…" />
-                <span className="form-hint">Paste a public image URL for the event banner.</span>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Badge Background Image URL</label>
-                <input type="url" className="form-input" value={badgeBackgroundURL} onChange={(e) => setBadgeBackgroundURL(e.target.value)} placeholder="https://… (optional)" />
-                <span className="form-hint">Custom background for attendee badges. Leave blank for the default gradient.</span>
+
+              {/* Banner Image */}
+              <ImageUploadInput
+                label="Banner Image"
+                hint="Upload from your device or paste a public image URL."
+                value={bannerImageURL}
+                onChange={setBannerImageURL}
+              />
+
+              {/* Badge Configuration */}
+              <div style={{ borderTop: "1px solid var(--gray-100)", paddingTop: "1.25rem" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+                  <div>
+                    <p style={{ fontWeight: 700, color: "var(--gray-800)", marginBottom: "0.2rem" }}>🎫 Attendee Badge</p>
+                    <p style={{ fontSize: "0.8rem", color: "var(--gray-500)" }}>Customize the badge printed/downloaded at check-in.</p>
+                  </div>
+                  <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
+                    <span style={{ fontSize: "0.85rem", color: "var(--gray-600)" }}>Enable Custom Background</span>
+                    <div
+                      onClick={() => setBadgeEnabled(!badgeEnabled)}
+                      style={{
+                        width: 44, height: 24, borderRadius: 12, cursor: "pointer", transition: "background 0.2s",
+                        background: badgeEnabled ? "var(--brand-600)" : "var(--gray-300)",
+                        position: "relative", flexShrink: 0,
+                      }}
+                    >
+                      <div style={{
+                        position: "absolute", top: 3, left: badgeEnabled ? 23 : 3,
+                        width: 18, height: 18, borderRadius: "50%", background: "#fff",
+                        transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)"
+                      }} />
+                    </div>
+                  </label>
+                </div>
+
+                {badgeEnabled && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "1rem", padding: "1rem", background: "var(--gray-50)", borderRadius: "0.75rem", border: "1px solid var(--gray-200)" }}>
+                    <ImageUploadInput
+                      label="Badge Background Image"
+                      hint="Best results with a 800×560px image (horizontal) or 600×800px (vertical)."
+                      value={badgeBackgroundURL}
+                      onChange={setBadgeBackgroundURL}
+                    />
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                      <div className="form-group" style={{ margin: 0 }}>
+                        <label className="form-label">Badge Size</label>
+                        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                          {BADGE_SIZES.map((s) => (
+                            <button key={s} type="button" style={toggleStyle(badgeSize === s)} onClick={() => setBadgeSize(s)}>
+                              {s}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="form-group" style={{ margin: 0 }}>
+                        <label className="form-label">Orientation</label>
+                        <div style={{ display: "flex", gap: "0.5rem" }}>
+                          <button type="button" style={toggleStyle(badgeOrientation === "vertical")} onClick={() => setBadgeOrientation("vertical")}>
+                            ▯ Vertical
+                          </button>
+                          <button type="button" style={toggleStyle(badgeOrientation === "horizontal")} onClick={() => setBadgeOrientation("horizontal")}>
+                            ▭ Horizontal
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ fontSize: "0.8rem", color: "var(--gray-500)", padding: "0.5rem 0.75rem", background: "#fff", borderRadius: "0.5rem", border: "1px solid var(--gray-200)" }}>
+                      📐 Badge: <strong>{badgeSize}</strong> • <strong style={{ textTransform: "capitalize" }}>{badgeOrientation}</strong>
+                      {" — "}
+                      {badgeSize === "A3" && badgeOrientation === "horizontal" && "1189 × 841 px"}
+                      {badgeSize === "A3" && badgeOrientation === "vertical" && "841 × 1189 px"}
+                      {badgeSize === "2*3" && badgeOrientation === "horizontal" && "900 × 600 px"}
+                      {badgeSize === "2*3" && badgeOrientation === "vertical" && "600 × 900 px"}
+                      {badgeSize === "3*4" && badgeOrientation === "horizontal" && "800 × 600 px"}
+                      {badgeSize === "3*4" && badgeOrientation === "vertical" && "600 × 800 px"}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -301,15 +466,34 @@ export default function CreateEventPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
               <div className="alert alert-info">Review your event details before creating. You can publish it later from the event management page.</div>
               <dl style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                <div><dt style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--gray-400)", textTransform: "uppercase" }}>Event Type</dt><dd style={{ fontWeight: 600, color: "var(--gray-900)" }}>{eventType === "EXHIBITION" ? "🎪 Exhibition (No Login Required)" : "📅 Standard Event (Login Required)"}</dd></div>
-                <div><dt style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--gray-400)", textTransform: "uppercase" }}>Title</dt><dd style={{ fontWeight: 600, color: "var(--gray-900)" }}>{title}</dd></div>
-                {description && <div><dt style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--gray-400)", textTransform: "uppercase" }}>Description</dt><dd style={{ color: "var(--gray-600)", fontSize: "0.9rem" }}>{description}</dd></div>}
-                <div><dt style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--gray-400)", textTransform: "uppercase" }}>Date</dt><dd style={{ color: "var(--gray-700)" }}>{date}{startTime && ` · ${startTime}`}{endTime && ` – ${endTime}`}</dd></div>
-                {location && <div><dt style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--gray-400)", textTransform: "uppercase" }}>Location</dt><dd style={{ color: "var(--gray-700)" }}>{location}</dd></div>}
-                {capacity && <div><dt style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--gray-400)", textTransform: "uppercase" }}>Capacity</dt><dd style={{ color: "var(--gray-700)" }}>{capacity}</dd></div>}
-                <div><dt style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--gray-400)", textTransform: "uppercase" }}>Ticket Types ({tickets.length})</dt><dd>{tickets.map((t) => <span key={t.name} className="badge badge-purple" style={{ marginRight: 6 }}>{t.name}</span>)}</dd></div>
-                <div><dt style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--gray-400)", textTransform: "uppercase" }}>Custom Fields ({fields.length})</dt><dd>{fields.length === 0 ? <span style={{ color: "var(--gray-400)" }}>None</span> : fields.map((f) => <span key={f.label} className="badge badge-blue" style={{ marginRight: 6 }}>{f.label}</span>)}</dd></div>
-                {badgeBackgroundURL && <div><dt style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--gray-400)", textTransform: "uppercase" }}>Badge Background</dt><dd style={{ color: "var(--gray-700)", fontSize: "0.85rem" }}>Custom image set</dd></div>}
+                <div><dt style={dtStyle}>Event Type</dt><dd style={{ fontWeight: 600, color: "var(--gray-900)" }}>{eventType === "EXHIBITION" ? "🎪 Exhibition (Phone + Name only)" : "📅 Standard Event (Name + Email)"}</dd></div>
+                <div><dt style={dtStyle}>Title</dt><dd style={{ fontWeight: 600, color: "var(--gray-900)" }}>{title}</dd></div>
+                {description && <div><dt style={dtStyle}>Description</dt><dd style={{ color: "var(--gray-600)", fontSize: "0.9rem" }}>{description}</dd></div>}
+                <div>
+                  <dt style={dtStyle}>Dates</dt>
+                  <dd style={{ color: "var(--gray-700)" }}>
+                    {date}{endDate && ` → ${endDate}`}
+                    {startTime && ` · ${startTime}`}{endTime && ` – ${endTime}`}
+                  </dd>
+                </div>
+                {location && <div><dt style={dtStyle}>Location</dt><dd style={{ color: "var(--gray-700)" }}>{location}</dd></div>}
+                {capacity && <div><dt style={dtStyle}>Capacity</dt><dd style={{ color: "var(--gray-700)" }}>{capacity}</dd></div>}
+                <div><dt style={dtStyle}>Ticket Types ({tickets.length})</dt><dd>{tickets.map((t) => <span key={t.name} className="badge badge-purple" style={{ marginRight: 6 }}>{t.name}</span>)}</dd></div>
+                <div><dt style={dtStyle}>Custom Fields ({fields.length})</dt><dd>{fields.length === 0 ? <span style={{ color: "var(--gray-400)" }}>None</span> : fields.map((f) => <span key={f.label} className="badge badge-blue" style={{ marginRight: 6 }}>{f.label}</span>)}</dd></div>
+                <div>
+                  <dt style={dtStyle}>Badge</dt>
+                  <dd style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", alignItems: "center" }}>
+                    {badgeEnabled ? (
+                      <>
+                        <span className="badge badge-green">Custom BG</span>
+                        <span className="badge badge-purple">{badgeSize}</span>
+                        <span className="badge badge-blue" style={{ textTransform: "capitalize" }}>{badgeOrientation}</span>
+                      </>
+                    ) : (
+                      <span className="badge badge-gray">Default gradient</span>
+                    )}
+                  </dd>
+                </div>
               </dl>
               {error && <div className="alert alert-error">⚠️ {error}</div>}
             </div>
@@ -349,3 +533,8 @@ export default function CreateEventPage() {
     </div>
   );
 }
+
+const dtStyle: React.CSSProperties = {
+  fontSize: "0.75rem", fontWeight: 700, color: "var(--gray-400)",
+  textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.25rem"
+};

@@ -43,12 +43,16 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
       title: body.title,
       description: body.description,
       date: body.date ? new Date(body.date) : undefined,
+      endDate: body.endDate !== undefined ? (body.endDate ? new Date(body.endDate) : null) : undefined,
       startTime: body.startTime,
       endTime: body.endTime,
       location: body.location,
       capacity: body.capacity != null ? Number(body.capacity) : undefined,
       bannerImageURL: body.bannerImageURL,
       badgeBackgroundURL: body.badgeBackgroundURL,
+      badgeEnabled: body.badgeEnabled !== undefined ? Boolean(body.badgeEnabled) : undefined,
+      badgeSize: body.badgeSize,
+      badgeOrientation: body.badgeOrientation,
     },
   });
 

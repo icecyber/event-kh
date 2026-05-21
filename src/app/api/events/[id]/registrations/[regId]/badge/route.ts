@@ -49,6 +49,9 @@ export async function GET(req: NextRequest, { params }: Ctx) {
     eventDate: event.startTime ? `${dateStr} · ${event.startTime}` : dateStr,
     eventLocation: event.location ?? undefined,
     backgroundImageURL: event.badgeBackgroundURL ?? undefined,
+    badgeEnabled: event.badgeEnabled,
+    badgeSize: event.badgeSize,
+    badgeOrientation: event.badgeOrientation,
   });
 
   // Mark badge as issued

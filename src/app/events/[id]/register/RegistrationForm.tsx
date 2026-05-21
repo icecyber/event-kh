@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 
@@ -30,41 +30,44 @@ interface EventData {
   customFields: CustomField[];
 }
 
-interface Props {
-  params: Promise<{ id: string }>;
-  eventData: EventData;
-}
-
 export default function RegistrationForm({ eventData }: { eventData: EventData }) {
   const router = useRouter();
   const { data: session } = useSession();
 
+  const isExhibition = eventData.eventType === "EXHIBITION";
+  const isGuest = isExhibition && !session;
+
   const [selectedTicket, setSelectedTicket] = useState(eventData.ticketTypes[0]?.id ?? "");
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [guestName, setGuestName] = useState("");
+
+  // Core attendee info — always collected
+  const [guestName, setGuestName] = useState(session?.user?.name ?? "");
   const [guestPhone, setGuestPhone] = useState("");
-  const [guestEmail, setGuestEmail] = useState("");
+  const [guestEmail, setGuestEmail] = useState(session?.user?.email ?? "");
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-
-  const isGuest = eventData.eventType === "EXHIBITION" && !session;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSubmitting(true);
 
-    if (isGuest) {
-      if (!guestName.trim()) {
-        setError("Please enter your Full Name.");
-        setSubmitting(false);
-        return;
-      }
-      if (!guestPhone.trim()) {
-        setError("Please enter your Phone Number.");
-        setSubmitting(false);
-        return;
-      }
+    // Client-side validation
+    if (!guestName.trim()) {
+      setError("Please enter your Full Name.");
+      setSubmitting(false);
+      return;
+    }
+    if (isExhibition && !guestPhone.trim()) {
+      setError("Please enter your Phone Number.");
+      setSubmitting(false);
+      return;
+    }
+    if (!isExhibition && !guestEmail.trim()) {
+      setError("Please enter your Email Address.");
+      setSubmitting(false);
+      return;
     }
 
     try {
@@ -80,7 +83,9 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
         body: JSON.stringify({
           ticketTypeId: selectedTicket,
           answers: formattedAnswers,
-          ...(isGuest ? { guestName, guestPhone, guestEmail } : {}),
+          guestName: guestName.trim(),
+          guestPhone: guestPhone.trim() || undefined,
+          guestEmail: guestEmail.trim() || undefined,
         }),
       });
 
@@ -109,57 +114,96 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
 
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-      {/* Guest attendee info */}
-      {isGuest && (
-        <div style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "1.25rem",
-          padding: "1.25rem",
-          background: "var(--gray-50)",
-          border: "1px solid var(--gray-200)",
-          borderRadius: "0.75rem",
-          marginBottom: "0.5rem"
-        }}>
-          <h4 style={{ fontSize: "1rem", fontWeight: 600, color: "var(--gray-900)", margin: 0 }}>Attendee Details</h4>
-          <p style={{ fontSize: "0.85rem", color: "var(--gray-500)", margin: 0 }}>Please fill out your details below. No account registration is required.</p>
-          
-          <div className="form-group" style={{ margin: 0 }}>
-            <label className="form-label" style={{ fontWeight: 600 }}>Full Name <span className="req">*</span></label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="e.g. Sokha Meas"
-              value={guestName}
-              onChange={(e) => setGuestName(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="form-group" style={{ margin: 0 }}>
-            <label className="form-label" style={{ fontWeight: 600 }}>Phone Number <span className="req">*</span></label>
-            <input
-              type="tel"
-              className="form-input"
-              placeholder="e.g. 012345678"
-              value={guestPhone}
-              onChange={(e) => setGuestPhone(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="form-group" style={{ margin: 0 }}>
-            <label className="form-label" style={{ fontWeight: 600 }}>Email Address <span style={{ fontWeight: 400, color: "var(--gray-400)" }}>(Optional)</span></label>
-            <input
-              type="email"
-              className="form-input"
-              placeholder="e.g. sokha@example.com"
-              value={guestEmail}
-              onChange={(e) => setGuestEmail(e.target.value)}
-            />
-          </div>
+      {/* Attendee core info — always shown */}
+      <div style={{
+        display: "flex", flexDirection: "column", gap: "1.25rem",
+        padding: "1.25rem", background: "var(--gray-50)",
+        border: "1px solid var(--gray-200)", borderRadius: "0.75rem",
+      }}>
+        <div>
+          <h4 style={{ fontSize: "1rem", fontWeight: 600, color: "var(--gray-900)", margin: 0, marginBottom: "0.25rem" }}>
+            Your Details
+          </h4>
+          <p style={{ fontSize: "0.85rem", color: "var(--gray-500)", margin: 0 }}>
+            {isExhibition
+              ? "No account needed! Just fill in your name and phone number."
+              : session
+                ? "We've pre-filled your info from your account. Feel free to update it."
+                : "Please enter your contact details to register."
+            }
+          </p>
         </div>
-      )}
+
+        <div className="form-group" style={{ margin: 0 }}>
+          <label className="form-label" style={{ fontWeight: 600 }}>Full Name <span className="req">*</span></label>
+          <input
+            type="text"
+            className="form-input"
+            placeholder="e.g. Sokha Meas"
+            value={guestName}
+            onChange={(e) => setGuestName(e.target.value)}
+            required
+          />
+        </div>
+
+        {/* Exhibition: require Phone, Email optional */}
+        {isExhibition && (
+          <>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label" style={{ fontWeight: 600 }}>Phone Number <span className="req">*</span></label>
+              <input
+                type="tel"
+                className="form-input"
+                placeholder="e.g. 012 345 678"
+                value={guestPhone}
+                onChange={(e) => setGuestPhone(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label" style={{ fontWeight: 600 }}>
+                Email Address <span style={{ fontWeight: 400, color: "var(--gray-400)" }}>(Optional)</span>
+              </label>
+              <input
+                type="email"
+                className="form-input"
+                placeholder="e.g. sokha@example.com"
+                value={guestEmail}
+                onChange={(e) => setGuestEmail(e.target.value)}
+              />
+            </div>
+          </>
+        )}
+
+        {/* Standard: require Email, Phone optional */}
+        {!isExhibition && (
+          <>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label" style={{ fontWeight: 600 }}>Email Address <span className="req">*</span></label>
+              <input
+                type="email"
+                className="form-input"
+                placeholder="e.g. sokha@example.com"
+                value={guestEmail}
+                onChange={(e) => setGuestEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label" style={{ fontWeight: 600 }}>
+                Phone Number <span style={{ fontWeight: 400, color: "var(--gray-400)" }}>(Optional)</span>
+              </label>
+              <input
+                type="tel"
+                className="form-input"
+                placeholder="e.g. 012 345 678"
+                value={guestPhone}
+                onChange={(e) => setGuestPhone(e.target.value)}
+              />
+            </div>
+          </>
+        )}
+      </div>
 
       {/* Ticket selection */}
       {eventData.ticketTypes.length > 1 && (

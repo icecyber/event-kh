@@ -19,7 +19,8 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   if (!event) return Response.json({ error: "Event not found" }, { status: 404 });
 
   const session = await getServerSession(authOptions);
-  const isGuest = event.eventType === "EXHIBITION" && !session;
+  const isExhibition = event.eventType === "EXHIBITION";
+  const isGuest = isExhibition && !session;
 
   if (!session && !isGuest) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -33,6 +34,21 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     guestPhone?: string;
     guestEmail?: string;
   };
+
+  // Validate core attendee fields
+  if (!guestName || !guestName.trim()) {
+    return Response.json({ error: "Full Name is required." }, { status: 400 });
+  }
+  if (isExhibition) {
+    if (!guestPhone || !guestPhone.trim()) {
+      return Response.json({ error: "Phone Number is required for Exhibition registration." }, { status: 400 });
+    }
+  } else {
+    // Standard event — email required
+    if (!guestEmail || !guestEmail.trim()) {
+      return Response.json({ error: "Email Address is required." }, { status: 400 });
+    }
+  }
 
   // Check duplicate registration
   if (session) {
@@ -48,16 +64,6 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     });
     if (existing) {
       return Response.json({ error: "This phone number is already registered for this event." }, { status: 409 });
-    }
-  }
-
-  // Validate guest fields
-  if (isGuest) {
-    if (!guestName || !guestName.trim()) {
-      return Response.json({ error: "Full Name is required for guest checkout" }, { status: 400 });
-    }
-    if (!guestPhone || !guestPhone.trim()) {
-      return Response.json({ error: "Phone Number is required for guest checkout" }, { status: 400 });
     }
   }
 
@@ -92,14 +98,14 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const uniqueId = session ? session.user.id : `guest-${crypto.randomUUID()}`;
   const qrCodeString = createQRString(eventId + "-" + uniqueId);
 
-  // Create registration
+  // Create registration — always store name, email, phone from form
   const registration = await prisma.registration.create({
     data: {
       eventId,
       attendeeId: session ? session.user.id : null,
-      guestName: isGuest && guestName ? guestName.trim() : null,
-      guestPhone: isGuest && guestPhone ? guestPhone.trim() : null,
-      guestEmail: isGuest && guestEmail ? guestEmail.trim() || null : null,
+      guestName: guestName.trim(),
+      guestPhone: guestPhone?.trim() || null,
+      guestEmail: guestEmail?.trim() || null,
       ticketTypeId,
       status: "CONFIRMED",
       qrCodeString,
