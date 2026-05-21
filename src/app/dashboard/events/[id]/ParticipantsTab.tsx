@@ -28,7 +28,9 @@ export default function ParticipantsTab({
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [redeemingId, setRedeemingId] = useState<string | null>(null);
+  const [undoingId, setUndoingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [printingId, setPrintingId] = useState<string | null>(null);
 
   // Debounce search
   useEffect(() => {
@@ -55,7 +57,7 @@ export default function ParticipantsTab({
     if (!reg.qrCodeString) return;
     setRedeemingId(reg.id);
     try {
-      const res = await fetch(`/api/events/${eventId}/redeem`, {
+      await fetch(`/api/events/${eventId}/redeem`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ qrCodeString: reg.qrCodeString }),
@@ -63,6 +65,22 @@ export default function ParticipantsTab({
       await fetchParticipants();
     } finally {
       setRedeemingId(null);
+    }
+  };
+
+  const handleUndoCheckin = async (reg: Participant) => {
+    if (!confirm(`Undo check-in for ${reg.attendee?.name || reg.guestName || "this participant"}?`)) return;
+    setUndoingId(reg.id);
+    try {
+      const res = await fetch(`/api/events/${eventId}/registrations/${reg.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "undo-checkin" }),
+      });
+      if (!res.ok) { alert("Undo failed"); return; }
+      await fetchParticipants();
+    } finally {
+      setUndoingId(null);
     }
   };
 
@@ -78,6 +96,50 @@ export default function ParticipantsTab({
     a.click();
     URL.revokeObjectURL(url);
     await fetchParticipants();
+  };
+
+  const handlePrintBadge = async (reg: Participant) => {
+    setPrintingId(reg.id);
+    try {
+      const res = await fetch(`/api/events/${eventId}/registrations/${reg.id}/badge`);
+      if (!res.ok) { alert("Failed to generate badge"); return; }
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const name = reg.attendee?.name || reg.guestName || "Guest";
+
+      const printWindow = window.open("", "_blank");
+      if (printWindow) {
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Print Badge - ${name}</title>
+              <style>
+                @page { size: auto; margin: 0; }
+                body {
+                  margin: 0;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  height: 100vh;
+                  background: white;
+                }
+                img {
+                  max-width: 100%;
+                  max-height: 100%;
+                  object-fit: contain;
+                }
+              </style>
+            </head>
+            <body>
+              <img src="${blobUrl}" onload="window.print(); window.close();" />
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+      }
+    } finally {
+      setPrintingId(null);
+    }
   };
 
   const handleDelete = async (reg: Participant) => {
@@ -96,7 +158,7 @@ export default function ParticipantsTab({
     window.open(`/api/events/${eventId}/export`, "_blank");
   };
 
-  const handlePrint = () => window.print();
+  const handlePrintList = () => window.print();
 
   return (
     <div>
@@ -112,7 +174,7 @@ export default function ParticipantsTab({
           />
         </div>
         <button id="export-csv-btn" className="btn btn-secondary" onClick={handleExportCSV}>⬇️ Export CSV</button>
-        <button id="print-participants-btn" className="btn btn-secondary" onClick={handlePrint}>🖨️ Print</button>
+        <button id="print-participants-btn" className="btn btn-secondary" onClick={handlePrintList}>🖨️ Print List</button>
       </div>
 
       {/* Stats bar */}
@@ -180,7 +242,7 @@ export default function ParticipantsTab({
                     </td>
                     <td className="no-print">
                       <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
-                        {!p.checkedInAt && (
+                        {!p.checkedInAt ? (
                           <button
                             className="btn btn-success btn-sm"
                             onClick={() => handleRedeem(p)}
@@ -189,13 +251,31 @@ export default function ParticipantsTab({
                           >
                             {redeemingId === p.id ? <span className="spinner" /> : "✅ Redeem"}
                           </button>
+                        ) : (
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => handleUndoCheckin(p)}
+                            disabled={undoingId === p.id}
+                            title="Undo check-in"
+                            style={{ color: "var(--amber-400)", borderColor: "var(--amber-400)" }}
+                          >
+                            {undoingId === p.id ? <span className="spinner spinner-dark" /> : "↩️ Undo"}
+                          </button>
                         )}
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => handlePrintBadge(p)}
+                          disabled={printingId === p.id}
+                          title="Print badge"
+                        >
+                          {printingId === p.id ? <span className="spinner spinner-dark" /> : "🖨️"}
+                        </button>
                         <button
                           className="btn btn-secondary btn-sm"
                           onClick={() => handleDownloadBadge(p)}
                           title="Download badge"
                         >
-                          🎫 Badge
+                          🎫
                         </button>
                         <button
                           className="btn btn-danger btn-sm"

@@ -37,6 +37,41 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   return Response.json(registration);
 }
 
+// PATCH /api/events/[id]/registrations/[regId] — undo check-in
+export async function PATCH(req: NextRequest, { params }: Ctx) {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== "ORGANIZER") {
+    return Response.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { id: eventId, regId } = await params;
+  const body = await req.json();
+
+  const registration = await prisma.registration.findUnique({
+    where: { id: regId },
+    include: { event: { select: { organizerId: true } } },
+  });
+
+  if (!registration) return Response.json({ error: "Not found" }, { status: 404 });
+  if (registration.event.organizerId !== session.user.id) {
+    return Response.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  // Undo check-in
+  if (body.action === "undo-checkin") {
+    const updated = await prisma.registration.update({
+      where: { id: regId },
+      data: {
+        checkedInAt: null,
+        status: "PENDING",
+      },
+    });
+    return Response.json(updated);
+  }
+
+  return Response.json({ error: "Unknown action" }, { status: 400 });
+}
+
 // DELETE /api/events/[id]/registrations/[regId]
 export async function DELETE(req: NextRequest, { params }: Ctx) {
   const session = await getServerSession(authOptions);
