@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useLang } from "@/components/LangProvider";
 
+const BRAND_POINTS = [
+  { icon: "✅", text: "Free to create your first event" },
+  { icon: "🌏", text: "Built for Cambodia, used across SE Asia" },
+  { icon: "⚡", text: "Set up in under 3 minutes" },
+  { icon: "🔒", text: "Secure QR tickets & attendee data" },
+];
+
 export default function RegisterPage() {
   const router = useRouter();
   const { t } = useLang();
@@ -33,101 +40,163 @@ export default function RegisterPage() {
         const data = await res.text();
         setError(data || "Registration failed");
       }
-    } catch (err: any) {
-      setError(err.message || "An error occurred");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-100">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-            {t("auth.createAccountTitle")}
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+    <div className="auth-layout">
+      {/* ── BRAND PANEL (left) ── */}
+      <div className="auth-panel-brand">
+        <div className="auth-panel-brand-content">
+          <div style={{ marginBottom: "2rem" }}>
+            <span style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontSize: "2rem", fontWeight: 900,
+              letterSpacing: "-0.04em",
+              background: "linear-gradient(135deg, #fff, #bae6fd)",
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+            }}>
+              ⚡ EventKH
+            </span>
+          </div>
+
+          <h1 style={{ fontSize: "2rem", marginBottom: "0.875rem" }}>
+            Start managing events like a pro
+          </h1>
+          <p style={{ marginBottom: "2.5rem" }}>
+            Create an account as an organizer or attendee and join thousands of event creators in Cambodia.
+          </p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+            {BRAND_POINTS.map((f) => (
+              <div key={f.text} style={{
+                display: "flex", alignItems: "center", gap: "0.875rem",
+                background: "rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: "0.875rem", padding: "0.75rem 1rem",
+                backdropFilter: "blur(8px)",
+              }}>
+                <span style={{ fontSize: "1.2rem" }}>{f.icon}</span>
+                <span style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.9)", fontWeight: 500 }}>{f.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── FORM PANEL (right) ── */}
+      <div className="auth-panel-form">
+        <div className="auth-form-box">
+          <h2>{t("auth.createAccountTitle")}</h2>
+          <p className="subtitle">
             {t("auth.alreadyHaveAccount")}{" "}
-            <Link
-              href="/login"
-              className="font-medium text-blue-600 hover:text-blue-500"
-            >
+            <Link href="/login" style={{ color: "var(--ocean-600)", fontWeight: 600, textDecoration: "none" }}>
               {t("auth.signIn")}
             </Link>
           </p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="rounded-md bg-red-50 p-4 text-sm text-red-700">
-              {error}
-            </div>
-          )}
-          <div className="space-y-4 rounded-md shadow-sm">
-            <div>
-              <label className="sr-only">{t("auth.fullNamePlaceholder")}</label>
+
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.15rem" }}>
+            {error && (
+              <div className="alert alert-error">{error}</div>
+            )}
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="name">{t("auth.fullNamePlaceholder")}</label>
               <input
                 id="name"
-                name="name"
                 type="text"
-                required
-                className="relative block w-full rounded-md border-0 py-2.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                placeholder={t("auth.fullNamePlaceholder")}
+                className="form-input"
+                placeholder="Dara Sok"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                required
+                autoComplete="name"
               />
             </div>
-            <div>
-              <label className="sr-only">{t("auth.emailPlaceholder")}</label>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="email">{t("auth.emailPlaceholder")}</label>
               <input
-                id="email-address"
-                name="email"
+                id="email"
                 type="email"
-                autoComplete="email"
-                required
-                className="relative block w-full rounded-md border-0 py-2.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                placeholder={t("auth.emailPlaceholder")}
+                className="form-input"
+                placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
               />
             </div>
-            <div>
-              <label className="sr-only">{t("auth.passwordPlaceholder")}</label>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="password">{t("auth.passwordPlaceholder")}</label>
               <input
                 id="password"
-                name="password"
                 type="password"
-                autoComplete="new-password"
-                required
-                className="relative block w-full rounded-md border-0 py-2.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                placeholder={t("auth.passwordPlaceholder")}
+                className="form-input"
+                placeholder="Min. 8 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                autoComplete="new-password"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t("auth.iAmA")}</label>
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="relative block w-full rounded-md border-0 py-2.5 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-              >
-                <option value="ATTENDEE">{t("auth.attendee")}</option>
-                <option value="ORGANIZER">{t("auth.organizer")}</option>
-              </select>
-            </div>
-          </div>
 
-          <div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="role">{t("auth.iAmA")}</label>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                {[
+                  { value: "ATTENDEE", label: t("auth.attendee"), icon: "🎟️" },
+                  { value: "ORGANIZER", label: t("auth.organizer"), icon: "🎪" },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setRole(opt.value)}
+                    style={{
+                      display: "flex", flexDirection: "column", alignItems: "center",
+                      gap: "0.35rem", padding: "0.875rem",
+                      borderRadius: "0.875rem", cursor: "pointer",
+                      border: role === opt.value
+                        ? "2px solid var(--ocean-500)"
+                        : "1.5px solid var(--gray-200)",
+                      background: role === opt.value ? "var(--ocean-50)" : "#fff",
+                      color: role === opt.value ? "var(--ocean-700)" : "var(--gray-600)",
+                      fontWeight: 600, fontSize: "0.85rem",
+                      transition: "all 0.2s",
+                      boxShadow: role === opt.value ? "0 0 0 3px rgba(14,165,233,0.15)" : "none",
+                    }}
+                  >
+                    <span style={{ fontSize: "1.4rem" }}>{opt.icon}</span>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
-              className="group relative flex w-full justify-center rounded-md bg-blue-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50"
+              className="btn btn-primary btn-lg"
+              style={{ width: "100%", justifyContent: "center", marginTop: "0.25rem", fontSize: "0.95rem" }}
             >
-              {loading ? t("auth.registering") : t("auth.registerBtn")}
+              {loading
+                ? <><span className="spinner" /> {t("auth.registering")}</>
+                : t("auth.registerBtn")}
             </button>
-          </div>
-        </form>
+          </form>
+
+          <p style={{ marginTop: "1.5rem", fontSize: "0.78rem", color: "var(--gray-300)", textAlign: "center", lineHeight: 1.6 }}>
+            By registering you agree to our{" "}
+            <span style={{ color: "var(--ocean-600)" }}>Terms of Service</span> and{" "}
+            <span style={{ color: "var(--ocean-600)" }}>Privacy Policy</span>.
+          </p>
+        </div>
       </div>
     </div>
   );

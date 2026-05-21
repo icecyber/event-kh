@@ -14,25 +14,22 @@ export default function NavBar() {
   const { t } = useLang();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Close mobile menu on route change
+  useEffect(() => { setMenuOpen(false); }, [pathname]);
   useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
-
-  // Close mobile menu on escape key
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMenuOpen(false);
-    };
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setMenuOpen(false); };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
   return (
     <header className="nav-bar">
-      <Link href="/" className="nav-logo">⚡ EventKH</Link>
+      {/* Logo */}
+      <Link href="/" className="nav-logo">
+        <div className="nav-logo-icon">⚡</div>
+        EventKH
+      </Link>
 
-      {/* Mobile hamburger */}
+      {/* Mobile toggle */}
       <button
         className="nav-toggle"
         onClick={() => setMenuOpen(!menuOpen)}
@@ -46,10 +43,12 @@ export default function NavBar() {
         {!isOnDash && (
           <Link
             href="/events"
-            className={`btn btn-ghost${pathname === "/events" ? " active-link" : ""}`}
-            style={pathname === "/events" ? { background: "var(--brand-50)", color: "var(--brand-700)" } : {}}
+            className="btn btn-ghost"
+            style={pathname === "/events"
+              ? { background: "var(--blue-50)", color: "var(--blue-700)", fontWeight: 700 }
+              : {}}
           >
-            {t("nav.browseEvents")}
+            📅 {t("nav.browseEvents")}
           </Link>
         )}
 
@@ -57,29 +56,33 @@ export default function NavBar() {
           <>
             <Link
               href="/dashboard"
-              className={`btn btn-ghost${isOnDash ? " active-link" : ""}`}
-              style={isOnDash ? { background: "var(--brand-50)", color: "var(--brand-700)" } : {}}
+              className="btn btn-ghost"
+              style={isOnDash
+                ? { background: "var(--blue-50)", color: "var(--blue-700)", fontWeight: 700 }
+                : {}}
             >
-              {t("nav.dashboard")}
+              📊 {t("nav.dashboard")}
             </Link>
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
               className="btn btn-secondary btn-sm"
             >
-              {t("nav.signOut")}
+              👋 {t("nav.signOut")}
             </button>
           </>
         ) : (
           <>
             <Link
               href="/login"
-              className={`btn btn-ghost${pathname === "/login" ? " active-link" : ""}`}
-              style={pathname === "/login" ? { background: "var(--brand-50)", color: "var(--brand-700)" } : {}}
+              className="btn btn-ghost"
+              style={pathname === "/login"
+                ? { background: "var(--blue-50)", color: "var(--blue-700)", fontWeight: 700 }
+                : {}}
             >
               {t("nav.logIn")}
             </Link>
             <Link href="/register" className="btn btn-primary btn-sm">
-              {t("nav.signUp")}
+              🚀 {t("nav.signUp")}
             </Link>
           </>
         )}
