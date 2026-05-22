@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
+import Sidebar from "@/components/Sidebar";
+
 export const metadata = { title: "Dashboard — EventKH" };
 
 export default async function DashboardPage() {
@@ -40,37 +42,12 @@ export default async function DashboardPage() {
 
   return (
     <div className="dash-layout">
-      {/* Sidebar */}
-      <aside className="dash-sidebar no-print">
-        <div style={{ marginBottom: "2rem", padding: "0.5rem" }}>
-          <p style={{ fontSize: "0.75rem", color: "var(--gray-400)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.5rem" }}>
-            {isOrganizer ? "Organizer" : "Attendee"}
-          </p>
-          <p style={{ color: "#fff", fontWeight: 600, fontSize: "0.925rem" }}>{session.user.name}</p>
-          <p style={{ color: "var(--gray-400)", fontSize: "0.8rem" }}>{session.user.email}</p>
-        </div>
-
-        {isOrganizer ? (
-          <>
-            <Link href="/dashboard" className="dash-sidebar-link active">📊 Overview</Link>
-            <Link href="/dashboard/events" className="dash-sidebar-link">📅 My Events</Link>
-            <Link href="/dashboard/events/new" className="dash-sidebar-link">➕ Create Event</Link>
-          </>
-        ) : (
-          <>
-            <Link href="/dashboard" className="dash-sidebar-link active">🎟️ My Tickets</Link>
-            <Link href="/events" className="dash-sidebar-link">🔍 Browse Events</Link>
-          </>
-        )}
-
-        <div style={{ marginTop: "auto", paddingTop: "2rem" }}>
-          <form action="/api/auth/signout" method="POST">
-            <button type="submit" className="dash-sidebar-link" style={{ background: "none", border: "none", cursor: "pointer", width: "100%", textAlign: "left", color: "var(--gray-400)", display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.65rem 0.85rem", borderRadius: "0.5rem", fontSize: "0.9rem", fontWeight: 500 }}>
-              🚪 Sign out
-            </button>
-          </form>
-        </div>
-      </aside>
+      {/* Reusable Sidebar */}
+      <Sidebar
+        userName={session.user.name}
+        userEmail={session.user.email}
+        role={session.user.role}
+      />
 
       {/* Main */}
       <main className="dash-main">

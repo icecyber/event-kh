@@ -1,6 +1,7 @@
 "use client";
 
 import { useLang } from "@/components/LangProvider";
+import TranslateText from "@/components/TranslateText";
 
 export function RegisterPageHeader({
   eventTitle, dateStr, startTime, location, userName,
@@ -14,10 +15,16 @@ export function RegisterPageHeader({
       <p style={{ fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.55)", marginBottom: "0.5rem" }}>
         {t("reg.title")}
       </p>
-      <h2 style={{ fontSize: "1.35rem", marginBottom: "0.75rem" }}>{eventTitle}</h2>
+      <h2 style={{ fontSize: "1.35rem", marginBottom: "0.75rem" }}>
+        <TranslateText text={eventTitle} />
+      </h2>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", fontSize: "0.875rem", color: "rgba(255,255,255,0.7)" }}>
         <span>📅 {dateStr}{startTime ? ` · ${startTime}` : ""}</span>
-        {location && <span>📍 {location}</span>}
+        {location && (
+          <span>
+            📍 <TranslateText text={location} />
+          </span>
+        )}
         <span>👤 {t("reg.registeringAs")} <strong style={{ color: "#fff" }}>{userName || t("reg.guestAttendee")}</strong></span>
       </div>
     </div>

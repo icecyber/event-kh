@@ -2,9 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import Sidebar from "@/components/Sidebar";
 import ParticipantsTab from "./ParticipantsTab";
 import RedeemTab from "./RedeemTab";
 import EditEventForm from "./EditEventForm";
+import BadgeDesignerTab from "./BadgeDesignerTab";
 
 interface EventData {
   id: string;
@@ -29,10 +32,11 @@ interface EventData {
   customFields: { id: string; label: string; fieldType: string; required: boolean; options?: string | null }[];
 }
 
-const TABS = ["Overview", "Participants", "Redeem", "Settings"] as const;
+const TABS = ["Overview", "Participants", "Redeem", "Badge Designer", "Settings"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function EventManagementClient({ event }: { event: EventData }) {
+  const { data: session } = useSession();
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
   const [isPublished, setIsPublished] = useState(event.isPublished);
   const [publishing, setPublishing] = useState(false);
@@ -64,18 +68,12 @@ export default function EventManagementClient({ event }: { event: EventData }) {
 
   return (
     <div className="dash-layout">
-      <aside className="dash-sidebar no-print">
-        <div style={{ marginBottom: "2rem", padding: "0.5rem" }}>
-          <p style={{ fontSize: "0.75rem", color: "var(--gray-400)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.5rem" }}>Organizer</p>
-        </div>
-        <Link href="/dashboard" className="dash-sidebar-link">📊 Overview</Link>
-        <Link href="/dashboard/events" className="dash-sidebar-link">📅 My Events</Link>
-        <Link href="/dashboard/events/new" className="dash-sidebar-link">➕ Create Event</Link>
-        <div style={{ marginTop: "1.5rem", padding: "0.5rem" }}>
-          <p style={{ fontSize: "0.7rem", color: "var(--gray-500)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.5rem" }}>Current Event</p>
-          <p style={{ color: "var(--gray-300)", fontSize: "0.82rem", lineHeight: 1.4 }}>{event.title}</p>
-        </div>
-      </aside>
+      <Sidebar
+        userName={session?.user?.name}
+        userEmail={session?.user?.email}
+        role={session?.user?.role || "ORGANIZER"}
+        currentEventTitle={event.title}
+      />
 
       <main className="dash-main">
         {/* Page header */}
@@ -149,9 +147,9 @@ export default function EventManagementClient({ event }: { event: EventData }) {
               key={tab}
               className={`tab-btn ${activeTab === tab ? "active" : ""}`}
               onClick={() => setActiveTab(tab)}
-              id={`tab-${tab.toLowerCase()}`}
+              id={`tab-${tab.toLowerCase().replace(" ", "-")}`}
             >
-              {tab === "Overview" ? "📋 " : tab === "Participants" ? "👥 " : tab === "Redeem" ? "📲 " : "⚙️ "}
+              {tab === "Overview" ? "📋 " : tab === "Participants" ? "👥 " : tab === "Redeem" ? "📲 " : tab === "Badge Designer" ? "🎨 " : "⚙️ "}
               {tab}
             </button>
           ))}
@@ -223,6 +221,8 @@ export default function EventManagementClient({ event }: { event: EventData }) {
         {activeTab === "Participants" && <ParticipantsTab eventId={event.id} />}
 
         {activeTab === "Redeem" && <RedeemTab eventId={event.id} />}
+
+        {activeTab === "Badge Designer" && <BadgeDesignerTab event={event} />}
 
         {activeTab === "Settings" && (
           <div style={{ maxWidth: 680 }}>

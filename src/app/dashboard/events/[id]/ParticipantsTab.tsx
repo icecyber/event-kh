@@ -175,6 +175,15 @@ export default function ParticipantsTab({
         </div>
         <button id="export-csv-btn" className="btn btn-secondary" onClick={handleExportCSV}>⬇️ Export CSV</button>
         <button id="print-participants-btn" className="btn btn-secondary" onClick={handlePrintList}>🖨️ Print List</button>
+        <a
+          href={`/dashboard/events/${eventId}/print-badges`}
+          target="_blank"
+          id="print-badges-btn"
+          className="btn btn-secondary"
+          style={{ textDecoration: "none" }}
+        >
+          🎫 Print All Badges
+        </a>
       </div>
 
       {/* Stats bar */}

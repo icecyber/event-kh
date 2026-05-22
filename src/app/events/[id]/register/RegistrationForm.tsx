@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useLang } from "@/components/LangProvider";
+import TranslateText from "@/components/TranslateText";
 
 interface CustomField {
   id: string;
@@ -228,7 +229,9 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
                   style={{ accentColor: "var(--brand-600)" }}
                 />
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, color: "var(--gray-800)" }}>{ticket.name}</div>
+                  <div style={{ fontWeight: 600, color: "var(--gray-800)" }}>
+                    <TranslateText text={ticket.name} />
+                  </div>
                 </div>
                 <span className="badge badge-green">{ticket.price === 0 ? t("events.free") : `$${ticket.price}`}</span>
               </label>
@@ -244,7 +247,7 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
         return (
           <div key={field.id} className="form-group">
             <label className="form-label">
-              {field.label}
+              <TranslateText text={field.label} />
               {field.required && <span className="req">*</span>}
             </label>
 
@@ -282,8 +285,8 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
                 required={field.required}
               >
                 <option value="">Select an option…</option>
-                {opts.map((opt: string) => (
-                  <option key={opt} value={opt}>{opt}</option>
+                {opts.map((opt: string, idx: number) => (
+                  <option key={idx} value={opt}>{opt}</option>
                 ))}
               </select>
             )}

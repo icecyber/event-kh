@@ -59,6 +59,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
         title: event.title,
         description: event.description,
         dateDisplay,
+        dateISO: event.date.toISOString(),
         startTime: event.startTime,
         endTime: event.endTime,
         location: event.location,
@@ -68,7 +69,14 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
         registrationCount: event._count.registrations,
         spotsLeft,
         ticketTypes: event.ticketTypes.map((t) => ({ id: t.id, name: t.name, price: t.price })),
-        customFields: event.customFields.map((f) => ({ id: f.id, label: f.label, required: f.required })),
+        customFields: event.customFields.map((f) => ({
+          id: f.id,
+          label: f.label,
+          fieldType: f.fieldType,
+          required: f.required,
+          options: f.options,
+          order: f.order,
+        })),
         existingRegId,
       }}
     />

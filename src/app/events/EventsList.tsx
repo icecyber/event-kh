@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useLang } from "@/components/LangProvider";
+import TranslateText from "@/components/TranslateText";
 
 interface EventItem {
   id: string;
@@ -63,14 +64,20 @@ export default function EventsList({ events }: { events: EventItem[] }) {
               </div>
               <div className="event-card-body">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
-                  <h3 className="event-card-title">{event.title}</h3>
+                  <h3 className="event-card-title">
+                    <TranslateText text={event.title} />
+                  </h3>
                   {event.hasFreeTicket && (
                     <span className="badge badge-green" style={{ flexShrink: 0 }}>{t("events.free")}</span>
                   )}
                 </div>
                 <div className="event-card-meta">
                   <span>📅 {dateStr}{event.startTime ? ` · ${event.startTime}` : ""}</span>
-                  {event.location && <span>📍 {event.location}</span>}
+                  {event.location && (
+                    <span>
+                      📍 <TranslateText text={event.location} />
+                    </span>
+                  )}
                   <span>👤 {t("events.by")} {event.organizerName}</span>
                   <span style={{ color: "var(--brand-600)", fontWeight: 600 }}>
                     {event.registrationCount} {t("events.registered")}

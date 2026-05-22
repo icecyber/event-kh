@@ -478,8 +478,8 @@ export default function CreateEventPage() {
                 </div>
                 {location && <div><dt style={dtStyle}>Location</dt><dd style={{ color: "var(--gray-700)" }}>{location}</dd></div>}
                 {capacity && <div><dt style={dtStyle}>Capacity</dt><dd style={{ color: "var(--gray-700)" }}>{capacity}</dd></div>}
-                <div><dt style={dtStyle}>Ticket Types ({tickets.length})</dt><dd>{tickets.map((t) => <span key={t.name} className="badge badge-purple" style={{ marginRight: 6 }}>{t.name}</span>)}</dd></div>
-                <div><dt style={dtStyle}>Custom Fields ({fields.length})</dt><dd>{fields.length === 0 ? <span style={{ color: "var(--gray-400)" }}>None</span> : fields.map((f) => <span key={f.label} className="badge badge-blue" style={{ marginRight: 6 }}>{f.label}</span>)}</dd></div>
+                <div><dt style={dtStyle}>Ticket Types ({tickets.length})</dt><dd>{tickets.map((t, idx) => <span key={idx} className="badge badge-purple" style={{ marginRight: 6 }}>{t.name}</span>)}</dd></div>
+                <div><dt style={dtStyle}>Custom Fields ({fields.length})</dt><dd>{fields.length === 0 ? <span style={{ color: "var(--gray-400)" }}>None</span> : fields.map((f, idx) => <span key={idx} className="badge badge-blue" style={{ marginRight: 6 }}>{f.label}</span>)}</dd></div>
                 <div>
                   <dt style={dtStyle}>Badge</dt>
                   <dd style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", alignItems: "center" }}>

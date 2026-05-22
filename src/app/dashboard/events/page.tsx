@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 
+import Sidebar from "@/components/Sidebar";
+
 export const metadata = { title: "My Events — EventKH" };
 
 export default async function OrganizerEventsPage() {
@@ -18,15 +20,11 @@ export default async function OrganizerEventsPage() {
 
   return (
     <div className="dash-layout">
-      <aside className="dash-sidebar no-print">
-        <div style={{ marginBottom: "2rem", padding: "0.5rem" }}>
-          <p style={{ fontSize: "0.75rem", color: "var(--gray-400)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.5rem" }}>Organizer</p>
-          <p style={{ color: "#fff", fontWeight: 600, fontSize: "0.925rem" }}>{session.user.name}</p>
-        </div>
-        <Link href="/dashboard" className="dash-sidebar-link">📊 Overview</Link>
-        <Link href="/dashboard/events" className="dash-sidebar-link active">📅 My Events</Link>
-        <Link href="/dashboard/events/new" className="dash-sidebar-link">➕ Create Event</Link>
-      </aside>
+      <Sidebar
+        userName={session.user.name}
+        userEmail={session.user.email}
+        role={session.user.role}
+      />
 
       <main className="dash-main">
         <div className="page-header">
