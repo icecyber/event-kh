@@ -76,141 +76,107 @@ export default function Home() {
   return (
     <main>
       {/* ══ HERO ═══════════════════════════════════════════════════ */}
-      <section className="hero">
-        <div className="hero-content">
-          <div className="hero-grid">
-            {/* Left: copy */}
-            <div>
-              <div style={{ marginBottom: "1.25rem" }}>
-                <span className="badge badge-sky" style={{ padding: "0.35rem 1rem", fontSize: "0.8rem" }}>
-                  🇰🇭 &nbsp;Built for Cambodia
-                </span>
-              </div>
+      <section className="hero" style={{ position: "relative", overflow: "hidden", minHeight: "55vh", display: "flex", alignItems: "center", justifyContent: "flex-start", padding: "3.5rem 0" }}>
+        {/* Subtle, clearer background YouTube Video */}
+        <div style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          pointerEvents: "none",
+          zIndex: 0,
+          overflow: "hidden",
+          opacity: 0.7, /* Subtle and modern 10% opacity video texture */
+        }}>
+          <iframe
+            src="https://www.youtube.com/embed/Vs_Fmf7Bzt8?autoplay=1&mute=1&loop=1&playlist=Vs_Fmf7Bzt8&start=4&controls=0&showinfo=0&rel=0&iv_load_policy=3&playsinline=1&enablejsapi=1&modestbranding=1&fs=0&disablekb=1"
+            frameBorder="0"
+            allow="autoplay; encrypted-media"
+            style={{
+              width: "100vw",
+              height: "56.25vw", /* Aspect ratio 16:9 */
+              minHeight: "100vh",
+              minWidth: "177.77vh", /* Aspect ratio 16:9 */
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              pointerEvents: "none",
+            }}
+          />
+          {/* Fading gradient overlay: deep contrast on the left for text, completely transparent on the right for video clarity */}
+          <div style={{
+            position: "absolute",
+            inset: 0,
+            background: "linear-gradient(90deg, rgba(10, 22, 40, 0.9) 0%, rgba(10, 22, 40, 0.78) 45%, rgba(10, 22, 40, 0.25) 80%, rgba(10, 22, 40, 0) 100%)",
+            zIndex: 1,
+            pointerEvents: "none",
+          }} />
+        </div>
 
-              <h1>
-                The smartest way to manage{" "}
-                <span className="hero-highlight">events in Cambodia</span>
-              </h1>
-
-              <p>{t("home.heroDesc")}</p>
-
-              <div className="hero-actions">
-                <Link href="/register" className="btn btn-xl" style={{
-                  background: "#fff", color: "var(--blue-700)",
-                  fontWeight: 700, boxShadow: "0 4px 24px rgba(0,0,0,0.2)",
-                }}>
-                  🚀 {t("home.getStarted")}
-                </Link>
-                <Link href="/events" className="btn btn-xl" style={{
-                  background: "rgba(255,255,255,0.12)",
-                  color: "#fff",
-                  border: "1.5px solid rgba(255,255,255,0.25)",
-                  backdropFilter: "blur(8px)",
-                }}>
-                  📅 {t("home.browseEvents")}
-                </Link>
-              </div>
-
-              {/* Social proof */}
-              <div style={{
-                marginTop: "2.5rem", display: "flex", alignItems: "center", gap: "0.875rem",
-                padding: "0.875rem 1.25rem",
-                background: "rgba(255,255,255,0.08)",
-                border: "1px solid rgba(255,255,255,0.12)",
-                borderRadius: "0.875rem", backdropFilter: "blur(8px)",
-                width: "fit-content",
-              }}>
-                <div style={{ display: "flex" }}>
-                  {["🧑‍💼", "👩‍💻", "👨‍🎓", "👩‍🏫"].map((e, i) => (
-                    <span key={i} style={{
-                      width: 32, height: 32, borderRadius: "50%",
-                      background: `hsl(${200 + i * 30}, 70%, 55%)`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: "1rem", marginLeft: i > 0 ? "-8px" : 0,
-                      border: "2px solid rgba(255,255,255,0.3)",
-                    }}>{e}</span>
-                  ))}
-                </div>
-                <div>
-                  <div style={{ color: "#fff", fontWeight: 700, fontSize: "0.9rem", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                    10,000+ organizers trust EventKH
-                  </div>
-                  <div style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.78rem" }}>
-                    ⭐⭐⭐⭐⭐ &nbsp;Rated #1 in Cambodia
-                  </div>
-                </div>
-              </div>
+        <div className="hero-content" style={{ position: "relative", zIndex: 2, width: "100%" }}>
+          <div style={{ maxWidth: 840, marginRight: "auto", marginLeft: 0, textAlign: "left", display: "flex", flexDirection: "column", alignItems: "flex-start", padding: "0 1.5rem 0 4.5rem" }}>
+            <div style={{ marginBottom: "1.25rem" }}>
+              <span className="badge badge-sky" style={{ padding: "0.4rem 1.1rem", fontSize: "0.85rem", backdropFilter: "blur(4px)", background: "rgba(14, 165, 243, 0.25)", color: "#e0f2fe", border: "1px solid rgba(14, 165, 243, 0.4)" }}>
+                🇰🇭 &nbsp;EventKH
+              </span>
             </div>
 
-            {/* Right: floating dashboard card */}
-            <div className="hero-card-wrapper">
-              <div className="hero-card">
-                {/* Card header */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
-                  <div>
-                    <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Live Event</div>
-                    <div style={{ color: "#fff", fontWeight: 700, fontSize: "1.05rem", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Tech Summit Phnom Penh 2025</div>
-                  </div>
-                  <span className="badge badge-green" style={{ background: "rgba(0,200,150,0.2)", color: "#6ee7b7", border: "1px solid rgba(0,200,150,0.3)" }}>
-                    ● Live
-                  </span>
-                </div>
+            <h1 style={{ fontSize: "3.5rem", lineHeight: 1.15, fontWeight: 800, color: "#ffffff", marginBottom: "1.25rem", letterSpacing: "-0.03em", textShadow: "0 2px 12px rgba(0, 0, 0, 0.5)" }}>
+              The smartest way to manage{" "}
+              <span className="hero-highlight">events in Cambodia 🇰🇭</span>
+            </h1>
 
-                {/* Stats row */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.75rem", marginBottom: "1rem" }}>
-                  {[
-                    { label: "Registered", value: "847", icon: "👥", color: "#60a5fa" },
-                    { label: "Checked In", value: "612", icon: "✅", color: "#34d399" },
-                    { label: "Capacity", value: "1000", icon: "🎯", color: "#fbbf24" },
-                  ].map((s) => (
-                    <div key={s.label} style={{
-                      background: "rgba(255,255,255,0.08)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: "0.75rem", padding: "0.875rem",
-                      textAlign: "center",
-                    }}>
-                      <div style={{ fontSize: "1.2rem", marginBottom: "0.25rem" }}>{s.icon}</div>
-                      <div style={{ color: s.color, fontWeight: 800, fontSize: "1.2rem", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{s.value}</div>
-                      <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.72rem" }}>{s.label}</div>
-                    </div>
-                  ))}
-                </div>
+            <p style={{ fontSize: "1.2rem", color: "rgba(255, 255, 255, 0.95)", marginBottom: "2.5rem", maxWidth: 620, lineHeight: 1.6, textShadow: "0 1px 8px rgba(0, 0, 0, 0.4)" }}>
+              {t("home.heroDesc")}
+            </p>
 
-                {/* Progress bar */}
-                <div style={{ marginBottom: "1rem" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
-                    <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.78rem" }}>Check-in progress</span>
-                    <span style={{ color: "#34d399", fontWeight: 700, fontSize: "0.78rem" }}>72%</span>
-                  </div>
-                  <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: "999px", height: "8px", overflow: "hidden" }}>
-                    <div style={{ width: "72%", height: "100%", background: "linear-gradient(90deg, #34d399, #60a5fa)", borderRadius: "999px" }} />
-                  </div>
-                </div>
+            <div className="hero-actions" style={{ justifyContent: "flex-start" }}>
+              <Link href="/register" className="btn btn-xl" style={{
+                background: "#fff", color: "var(--blue-700)",
+                fontWeight: 700, boxShadow: "0 4px 24px rgba(0,0,0,0.2)",
+              }}>
+                🚀 {t("home.getStarted")}
+              </Link>
+              <Link href="/events" className="btn btn-xl" style={{
+                background: "rgba(255,255,255,0.12)",
+                color: "#fff",
+                border: "1.5px solid rgba(255,255,255,0.25)",
+                backdropFilter: "blur(8px)",
+              }}>
+                📅 {t("home.browseEvents")}
+              </Link>
+            </div>
 
-                {/* Recent check-ins */}
-                <div className="hero-card-inner">
-                  <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.625rem" }}>
-                    Recent Check-ins
-                  </div>
-                  {[
-                    { name: "Dara Sok", time: "2m ago", ticket: "VIP" },
-                    { name: "Sreymom Chan", time: "5m ago", ticket: "General" },
-                    { name: "Virak Phal", time: "8m ago", ticket: "General" },
-                  ].map((r) => (
-                    <div key={r.name} style={{
-                      display: "flex", alignItems: "center", justifyContent: "space-between",
-                      padding: "0.5rem 0", borderBottom: "1px solid rgba(255,255,255,0.06)",
-                    }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
-                        <span style={{ fontSize: "1.1rem" }}>✅</span>
-                        <span style={{ color: "rgba(255,255,255,0.85)", fontSize: "0.85rem", fontWeight: 500 }}>{r.name}</span>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>{r.time}</span>
-                        <span style={{ background: "rgba(96,165,250,0.2)", color: "#93c5fd", fontSize: "0.7rem", fontWeight: 600, padding: "0.15rem 0.5rem", borderRadius: "999px" }}>{r.ticket}</span>
-                      </div>
-                    </div>
-                  ))}
+            {/* Social proof */}
+            <div style={{
+              marginTop: "3.5rem", display: "flex", alignItems: "center", gap: "0.875rem",
+              padding: "0.875rem 1.25rem",
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "0.875rem", backdropFilter: "blur(8px)",
+              width: "fit-content",
+              marginRight: "auto",
+              marginLeft: 0,
+            }}>
+              <div style={{ display: "flex" }}>
+                {["🧑‍💼", "👩‍💻", "👨‍🎓", "👩‍🏫"].map((e, i) => (
+                  <span key={i} style={{
+                    width: 32, height: 32, borderRadius: "50%",
+                    background: `hsl(${200 + i * 30}, 70%, 55%)`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "1rem", marginLeft: i > 0 ? "-8px" : 0,
+                    border: "2px solid rgba(255,255,255,0.3)",
+                  }}>{e}</span>
+                ))}
+              </div>
+              <div style={{ textAlign: "left" }}>
+                <div style={{ color: "#fff", fontWeight: 700, fontSize: "0.9rem", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                  10,000+ organizers trust EventKH 🇰🇭
+                </div>
+                <div style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.78rem" }}>
+                  ⭐⭐⭐⭐⭐ &nbsp;Rated #1 in Cambodia
                 </div>
               </div>
             </div>
