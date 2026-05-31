@@ -12,13 +12,26 @@ export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
 
+  const isAdmin = session.user.role === "ADMIN" || session.user.email === "admin@eventkh.com";
   const isOrganizer = session.user.role === "ORGANIZER";
 
   let stats = { events: 0, registrations: 0, checkedIn: 0 };
   let recentEvents: any[] = [];
   let myRegistrations: any[] = [];
 
-  if (isOrganizer) {
+  if (isAdmin) {
+    const [events, allRegs, checkedIn] = await Promise.all([
+      prisma.event.count(),
+      prisma.registration.count(),
+      prisma.registration.count({ where: { status: "CHECKED_IN" } }),
+    ]);
+    stats = { events, registrations: allRegs, checkedIn };
+    recentEvents = await prisma.event.findMany({
+      include: { _count: { select: { registrations: true } } },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+    });
+  } else if (isOrganizer) {
     const [events, allRegs, checkedIn] = await Promise.all([
       prisma.event.count({ where: { organizerId: session.user.id } }),
       prisma.registration.count({ where: { event: { organizerId: session.user.id } } }),
@@ -55,17 +68,17 @@ export default async function DashboardPage() {
           <div>
             <h1 className="page-title">Welcome back, {session.user.name?.split(" ")[0]}! 👋</h1>
             <p className="page-subtitle">
-              {isOrganizer ? "Manage your events and track registrations" : "View your upcoming events and tickets"}
+              {isAdmin ? "Platform-wide statistics & logs" : isOrganizer ? "Manage your events and track registrations" : "View your upcoming events and tickets"}
             </p>
           </div>
-          {isOrganizer && (
+          {(isOrganizer || isAdmin) && (
             <Link href="/dashboard/events/new" className="btn btn-primary no-print">
               + Create Event
             </Link>
           )}
         </div>
 
-        {isOrganizer ? (
+        {(isOrganizer || isAdmin) ? (
           <>
             {/* Stats */}
             <div className="grid-3" style={{ marginBottom: "2rem" }}>

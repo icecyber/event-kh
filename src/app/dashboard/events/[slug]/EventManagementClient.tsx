@@ -33,8 +33,7 @@ interface EventData {
   customFields: { id: string; label: string; fieldType: string; required: boolean; options?: string | null }[];
 }
 
-const TABS = ["Overview", "Participants", "Redeem", "Badge Designer", "Settings"] as const;
-type Tab = (typeof TABS)[number];
+type Tab = "Overview" | "Participants" | "Redeem" | "Badge Designer" | "Settings";
 
 export default function EventManagementClient({ event }: { event: EventData }) {
   const { data: session } = useSession();
@@ -42,6 +41,8 @@ export default function EventManagementClient({ event }: { event: EventData }) {
   const [isPublished, setIsPublished] = useState(event.isPublished);
   const [publishing, setPublishing] = useState(false);
   const [shareUrl, setShareUrl] = useState(`/events/${event.slug}/register`);
+
+  const tabsList = ["Overview", "Participants", "Redeem", "Badge Designer", "Settings"];
 
   useEffect(() => {
     setShareUrl(`${window.location.origin}/events/${event.slug}/register`);
@@ -143,14 +144,14 @@ export default function EventManagementClient({ event }: { event: EventData }) {
 
         {/* Tabs */}
         <div className="tabs no-print">
-          {TABS.map((tab) => (
+          {tabsList.map((tab) => (
             <button
               key={tab}
               className={`tab-btn ${activeTab === tab ? "active" : ""}`}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => setActiveTab(tab as Tab)}
               id={`tab-${tab.toLowerCase().replace(" ", "-")}`}
             >
-              {tab === "Overview" ? "📋 " : tab === "Participants" ? "👥 " : tab === "Redeem" ? "📲 " : tab === "Badge Designer" ? "🎨 " : "⚙️ "}
+              {tab === "Overview" ? "📋 " : tab === "Participants" ? "👥 " : tab === "Appointments" ? "🤝 " : tab === "Redeem" ? "📲 " : tab === "Badge Designer" ? "🎨 " : "⚙️ "}
               {tab}
             </button>
           ))}

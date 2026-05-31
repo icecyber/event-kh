@@ -8,7 +8,14 @@ type Ctx = { params: Promise<{ id: string }> };
 // GET /api/events/[id]/export — export participants as CSV
 export async function GET(_req: NextRequest, { params }: Ctx) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "ORGANIZER") {
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  const isAdmin = session.user.role === "ADMIN" || session.user.email === "admin@eventkh.com";
+  const isOrganizer = session.user.role === "ORGANIZER";
+
+  if (!isOrganizer && !isAdmin) {
     return new Response("Forbidden", { status: 403 });
   }
 
@@ -18,7 +25,7 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
     where: { id: eventId },
   });
   if (!event) return new Response("Not found", { status: 404 });
-  if (event.organizerId !== session.user.id) {
+  if (event.organizerId !== session.user.id && !isAdmin) {
     return new Response("Forbidden", { status: 403 });
   }
 

@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaLibSql } from '@prisma/adapter-libsql'
 
+// Force module cache invalidation to reload newly generated Prisma models (e.g. Appointment, Notification)
+
 const adapter = new PrismaLibSql({
   url: process.env.DATABASE_URL || 'file:./dev.db',
 })

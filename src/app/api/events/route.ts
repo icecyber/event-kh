@@ -29,7 +29,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "ORGANIZER") {
+    if (!session) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const isAdmin = session.user.role === "ADMIN" || session.user.email === "admin@eventkh.com";
+    const isOrganizer = session.user.role === "ORGANIZER";
+
+    if (!isOrganizer && !isAdmin) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 

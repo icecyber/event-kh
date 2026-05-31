@@ -18,6 +18,7 @@ export default function Sidebar({
   currentEventTitle,
 }: SidebarProps) {
   const pathname = usePathname();
+  const isAdmin = role === "ADMIN";
   const isOrganizer = role === "ORGANIZER";
 
   const getLinkClass = (href: string) => {
@@ -37,7 +38,8 @@ export default function Sidebar({
         <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", marginBottom: "0.5rem" }}>
           <div style={{
             width: 32, height: 32, borderRadius: "50%",
-            background: "var(--blue-600)", color: "#fff",
+            background: isAdmin ? "var(--rose-600)" : isOrganizer ? "var(--blue-600)" : "var(--emerald-600)",
+            color: "#fff",
             display: "flex", alignItems: "center", justifyContent: "center",
             fontWeight: 700, fontSize: "0.85rem",
             fontFamily: "'Plus Jakarta Sans', sans-serif"
@@ -46,10 +48,11 @@ export default function Sidebar({
           </div>
           <div style={{ minWidth: 0 }}>
             <p style={{
-              fontSize: "0.7rem", color: "var(--blue-600)",
+              fontSize: "0.7rem",
+              color: isAdmin ? "var(--rose-600)" : isOrganizer ? "var(--blue-600)" : "var(--emerald-600)",
               fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em",
             }}>
-              {isOrganizer ? "Organizer" : "Attendee"}
+              {isAdmin ? "Administrator" : isOrganizer ? "Organizer" : "Attendee"}
             </p>
             <p style={{
               color: "var(--gray-900)", fontWeight: 700,
@@ -71,7 +74,19 @@ export default function Sidebar({
       <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
         <p className="dash-sidebar-section">Main Menu</p>
         
-        {isOrganizer ? (
+        {isAdmin ? (
+          <>
+            <Link href="/dashboard" className={getLinkClass("/dashboard")}>
+              <span className="dash-sidebar-icon">📊</span> Platform Stats
+            </Link>
+            <Link href="/dashboard/events" className={getLinkClass("/dashboard/events")}>
+              <span className="dash-sidebar-icon">📅</span> Platform Events
+            </Link>
+            <Link href="/dashboard/appointments" className={getLinkClass("/dashboard/appointments")}>
+              <span className="dash-sidebar-icon">🤝</span> Matchmaking
+            </Link>
+          </>
+        ) : isOrganizer ? (
           <>
             <Link href="/dashboard" className={getLinkClass("/dashboard")}>
               <span className="dash-sidebar-icon">📊</span> Overview
@@ -87,6 +102,9 @@ export default function Sidebar({
           <>
             <Link href="/dashboard" className={getLinkClass("/dashboard")}>
               <span className="dash-sidebar-icon">🎟️</span> My Tickets
+            </Link>
+            <Link href="/dashboard/matchmaking" className={getLinkClass("/dashboard/matchmaking")}>
+              <span className="dash-sidebar-icon">🤝</span> Matchmaking
             </Link>
             <Link href="/events" className={getLinkClass("/events")}>
               <span className="dash-sidebar-icon">🔍</span> Browse Events

@@ -20,6 +20,13 @@ export default function LangSwitcher() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const getFlagUrl = (flag: string) => {
+    if (flag === "🇬🇧") return "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f1ec-1f1e7.png";
+    if (flag === "🇰🇭") return "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f1f0-1f1ed.png";
+    if (flag === "🇨🇳") return "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f1e8-1f1f3.png";
+    return "";
+  };
+
   return (
     <div ref={ref} style={{ position: "relative", zIndex: 1000 }}>
       <button
@@ -34,7 +41,11 @@ export default function LangSwitcher() {
           transition: "all 0.15s",
         }}
       >
-        <span style={{ fontSize: "1rem" }}>{current.flag}</span>
+        <img
+          src={getFlagUrl(current.flag)}
+          alt={current.label}
+          style={{ width: "1.1rem", height: "1.1rem", display: "inline-block", verticalAlign: "middle", objectFit: "contain" }}
+        />
         <span>{current.label}</span>
         <span style={{ fontSize: "0.6rem", opacity: 0.5, marginLeft: "0.15rem" }}>▼</span>
       </button>
@@ -63,7 +74,11 @@ export default function LangSwitcher() {
               onMouseEnter={(e) => (e.currentTarget.style.background = l.code === locale ? "var(--brand-50)" : "var(--gray-50)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = l.code === locale ? "var(--brand-50)" : "transparent")}
             >
-              <span style={{ fontSize: "1.15rem" }}>{l.flag}</span>
+              <img
+                src={getFlagUrl(l.flag)}
+                alt={l.label}
+                style={{ width: "1.2rem", height: "1.2rem", display: "inline-block", verticalAlign: "middle", objectFit: "contain" }}
+              />
               <span>{l.label}</span>
               {l.code === locale && <span style={{ marginLeft: "auto", fontSize: "0.8rem" }}>✓</span>}
             </button>

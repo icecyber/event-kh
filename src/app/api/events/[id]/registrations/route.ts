@@ -8,7 +8,14 @@ type Ctx = { params: Promise<{ id: string }> };
 // GET /api/events/[id]/registrations — list participants (organizer only)
 export async function GET(req: NextRequest, { params }: Ctx) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "ORGANIZER") {
+  if (!session) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const isAdmin = session.user.role === "ADMIN" || session.user.email === "admin@eventkh.com";
+  const isOrganizer = session.user.role === "ORGANIZER";
+
+  if (!isOrganizer && !isAdmin) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -17,7 +24,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   // Verify organizer owns this event
   const event = await prisma.event.findUnique({ where: { id: eventId } });
   if (!event) return Response.json({ error: "Not found" }, { status: 404 });
-  if (event.organizerId !== session.user.id) {
+  if (event.organizerId !== session.user.id && !isAdmin) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 

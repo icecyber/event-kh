@@ -10,10 +10,15 @@ export const metadata = { title: "My Events — EventKH" };
 
 export default async function OrganizerEventsPage() {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "ORGANIZER") redirect("/dashboard");
+  if (!session) redirect("/login");
+
+  const isAdmin = session.user.role === "ADMIN" || session.user.email === "admin@eventkh.com";
+  const isOrganizer = session.user.role === "ORGANIZER";
+
+  if (!isAdmin && !isOrganizer) redirect("/dashboard");
 
   const events = await prisma.event.findMany({
-    where: { organizerId: session.user.id },
+    where: isAdmin ? {} : { organizerId: session.user.id },
     include: { _count: { select: { registrations: true } }, ticketTypes: true },
     orderBy: { createdAt: "desc" },
   });
@@ -29,7 +34,7 @@ export default async function OrganizerEventsPage() {
       <main className="dash-main">
         <div className="page-header">
           <div>
-            <h1 className="page-title">My Events</h1>
+            <h1 className="page-title">{isAdmin ? "Platform Events" : "My Events"}</h1>
             <p className="page-subtitle">{events.length} event{events.length !== 1 ? "s" : ""} total</p>
           </div>
           <Link href="/dashboard/events/new" className="btn btn-primary no-print">+ Create Event</Link>

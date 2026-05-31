@@ -25,14 +25,21 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
 // PATCH /api/events/[id]
 export async function PATCH(req: NextRequest, { params }: Ctx) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "ORGANIZER") {
+  if (!session) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const isAdmin = session.user.role === "ADMIN" || session.user.email === "admin@eventkh.com";
+  const isOrganizer = session.user.role === "ORGANIZER";
+
+  if (!isOrganizer && !isAdmin) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const { id } = await params;
   const event = await prisma.event.findUnique({ where: { id } });
   if (!event) return Response.json({ error: "Not found" }, { status: 404 });
-  if (event.organizerId !== session.user.id) {
+  if (event.organizerId !== session.user.id && !isAdmin) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -64,14 +71,21 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
 // DELETE /api/events/[id]
 export async function DELETE(_req: NextRequest, { params }: Ctx) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "ORGANIZER") {
+  if (!session) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const isAdmin = session.user.role === "ADMIN" || session.user.email === "admin@eventkh.com";
+  const isOrganizer = session.user.role === "ORGANIZER";
+
+  if (!isOrganizer && !isAdmin) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const { id } = await params;
   const event = await prisma.event.findUnique({ where: { id } });
   if (!event) return Response.json({ error: "Not found" }, { status: 404 });
-  if (event.organizerId !== session.user.id) {
+  if (event.organizerId !== session.user.id && !isAdmin) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 

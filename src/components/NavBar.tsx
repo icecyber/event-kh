@@ -6,6 +6,7 @@ import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useLang } from "./LangProvider";
 import LangSwitcher from "./LangSwitcher";
+import AdminNotifications from "./AdminNotifications";
 
 export default function NavBar() {
   const { data: session } = useSession();
@@ -41,15 +42,26 @@ export default function NavBar() {
 
       <nav className={`nav-links${menuOpen ? " open" : ""}`}>
         {!isOnDash && (
-          <Link
-            href="/events"
-            className="btn btn-ghost"
-            style={pathname === "/events"
-              ? { background: "var(--blue-50)", color: "var(--blue-700)", fontWeight: 700 }
-              : {}}
-          >
-            📅 {t("nav.browseEvents")}
-          </Link>
+          <>
+            <Link
+              href="/events"
+              className="btn btn-ghost"
+              style={pathname === "/events"
+                ? { background: "var(--blue-50)", color: "var(--blue-700)", fontWeight: 700 }
+                : {}}
+            >
+              📅 {t("nav.browseEvents")}
+            </Link>
+            <Link
+              href="/matchmaking"
+              className="btn btn-ghost"
+              style={pathname === "/matchmaking"
+                ? { background: "var(--blue-50)", color: "var(--blue-700)", fontWeight: 700 }
+                : {}}
+            >
+              🤝 Matchmaking
+            </Link>
+          </>
         )}
 
         {session ? (
@@ -87,6 +99,7 @@ export default function NavBar() {
           </>
         )}
 
+        {session && <AdminNotifications />}
         <LangSwitcher />
       </nav>
     </header>

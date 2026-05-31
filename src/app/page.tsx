@@ -75,8 +75,42 @@ export default function Home() {
 
   return (
     <main>
+      {/* Custom localized style block for interactive button states in the neutral bright hero */}
+      <style>{`
+        .hero-btn-primary {
+          background: #e11d48 !important;
+          color: #ffffff !important;
+          box-shadow: 0 4px 20px rgba(225, 29, 72, 0.22) !important;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        .hero-btn-primary:hover {
+          background: #be123c !important;
+          transform: translateY(-2px) !important;
+          box-shadow: 0 6px 24px rgba(225, 29, 72, 0.32) !important;
+        }
+        .hero-btn-primary:active {
+          transform: translateY(0) !important;
+        }
+        .hero-btn-secondary {
+          background: #ffffff !important;
+          color: #27272a !important;
+          border: 1.5px solid #d4d4d8 !important;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        .hero-btn-secondary:hover {
+          background: #fafafa !important;
+          border-color: #a1a1aa !important;
+          color: #09090b !important;
+          transform: translateY(-2px) !important;
+        }
+        .hero-btn-secondary:active {
+          transform: translateY(0) !important;
+        }
+      `}</style>
+
       {/* ══ HERO ═══════════════════════════════════════════════════ */}
-      <section className="hero" style={{ position: "relative", overflow: "hidden", minHeight: "55vh", display: "flex", alignItems: "center", justifyContent: "flex-start", padding: "3.5rem 0", background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)", borderBottom: "1px solid var(--gray-200)" }}>
+      <section className="hero" style={{ position: "relative", overflow: "hidden", minHeight: "55vh", display: "flex", alignItems: "center", justifyContent: "flex-start", padding: "3.5rem 0", background: "linear-gradient(135deg, #ffffff 0%, #fafafa 100%)", borderBottom: "1px solid #e4e4e7" }}>
         {/* Subtle, clearer background YouTube Video on a bright background */}
         <div style={{
           position: "absolute",
@@ -109,7 +143,7 @@ export default function Home() {
           <div style={{
             position: "absolute",
             inset: 0,
-            background: "linear-gradient(90deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.85) 45%, rgba(255, 255, 255, 0.3) 80%, rgba(255, 255, 255, 0) 100%)",
+            background: "linear-gradient(90deg, rgba(255, 255, 255, 0.97) 0%, rgba(255, 255, 255, 0.88) 45%, rgba(255, 255, 255, 0.3) 80%, rgba(255, 255, 255, 0) 100%)",
             zIndex: 1,
             pointerEvents: "none",
           }} />
@@ -118,33 +152,29 @@ export default function Home() {
         <div className="hero-content" style={{ position: "relative", zIndex: 2, width: "100%" }}>
           <div style={{ maxWidth: 840, marginRight: "auto", marginLeft: 0, textAlign: "left", display: "flex", flexDirection: "column", alignItems: "flex-start", padding: "0 1.5rem 0 4.5rem" }}>
             <div style={{ marginBottom: "1.25rem" }}>
-              <span className="badge badge-sky" style={{ padding: "0.4rem 1.1rem", fontSize: "0.85rem", backdropFilter: "blur(4px)", background: "rgba(14, 165, 243, 0.12)", color: "var(--brand-700)", border: "1px solid rgba(14, 165, 243, 0.25)" }}>
-                🇰🇭 &nbsp;EventKH
+              <span className="badge" style={{ padding: "0.4rem 1.1rem", fontSize: "0.85rem", backdropFilter: "blur(4px)", background: "rgba(225, 29, 72, 0.08)", color: "#dc2626", border: "1px solid rgba(225, 29, 72, 0.2)", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
+                <img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f1f0-1f1ed.png" alt="🇰🇭" style={{ width: "1.25em", height: "1.25em", objectFit: "contain" }} />
+                EventKH
               </span>
             </div>
 
-            <h1 style={{ fontSize: "3.5rem", lineHeight: 1.15, fontWeight: 800, color: "#0f172a", marginBottom: "1.25rem", letterSpacing: "-0.03em" }}>
+            <h1 style={{ fontSize: "3.5rem", lineHeight: 1.15, fontWeight: 800, color: "#09090b", marginBottom: "1.25rem", letterSpacing: "-0.03em" }}>
               The smartest way to manage{" "}
-              <span className="hero-highlight" style={{ background: "linear-gradient(135deg, var(--brand-600) 0%, var(--brand-800) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>events in Cambodia 🇰🇭</span>
+              <span className="hero-highlight" style={{ background: "linear-gradient(135deg, #e11d48 0%, #be123c 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", display: "inline-flex", alignItems: "center", flexWrap: "wrap", gap: "0.3rem" }}>
+                events in Cambodia
+                <img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f1f0-1f1ed.png" alt="🇰🇭" style={{ width: "0.9em", height: "0.9em", objectFit: "contain", verticalAlign: "middle" }} />
+              </span>
             </h1>
 
-            <p style={{ fontSize: "1.2rem", color: "#334155", marginBottom: "2.5rem", maxWidth: 620, lineHeight: 1.6 }}>
+            <p style={{ fontSize: "1.2rem", color: "#27272a", marginBottom: "2.5rem", maxWidth: 620, lineHeight: 1.6 }}>
               {t("home.heroDesc")}
             </p>
 
             <div className="hero-actions" style={{ justifyContent: "flex-start" }}>
-              <Link href="/register" className="btn btn-xl" style={{
-                background: "var(--brand-600)", color: "#fff",
-                fontWeight: 700, boxShadow: "0 4px 24px rgba(9, 131, 239, 0.22)",
-              }}>
+              <Link href="/register" className="btn btn-xl hero-btn-primary">
                 🚀 {t("home.getStarted")}
               </Link>
-              <Link href="/events" className="btn btn-xl" style={{
-                background: "#fff",
-                color: "var(--gray-700)",
-                border: "1.5px solid var(--gray-300)",
-                boxShadow: "var(--shadow-sm)",
-              }}>
+              <Link href="/events" className="btn btn-xl hero-btn-secondary">
                 📅 {t("home.browseEvents")}
               </Link>
             </div>
@@ -153,8 +183,8 @@ export default function Home() {
             <div style={{
               marginTop: "3.5rem", display: "flex", alignItems: "center", gap: "0.875rem",
               padding: "0.875rem 1.25rem",
-              background: "rgba(15, 23, 42, 0.04)",
-              border: "1px solid rgba(15, 23, 42, 0.08)",
+              background: "rgba(24, 24, 27, 0.04)",
+              border: "1px solid rgba(24, 24, 27, 0.08)",
               borderRadius: "0.875rem", backdropFilter: "blur(8px)",
               width: "fit-content",
               marginRight: "auto",
@@ -164,7 +194,7 @@ export default function Home() {
                 {["🧑‍💼", "👩‍💻", "👨‍🎓", "👩‍🏫"].map((e, i) => (
                   <span key={i} style={{
                     width: 32, height: 32, borderRadius: "50%",
-                    background: `hsl(${200 + i * 30}, 70%, 55%)`,
+                    background: `hsl(${20 + i * 30}, 80%, 50%)`,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontSize: "1rem", marginLeft: i > 0 ? "-8px" : 0,
                     border: "2px solid #fff",
@@ -172,10 +202,11 @@ export default function Home() {
                 ))}
               </div>
               <div style={{ textAlign: "left" }}>
-                <div style={{ color: "#0f172a", fontWeight: 700, fontSize: "0.9rem", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                  10,000+ organizers trust EventKH 🇰🇭
+                <div style={{ color: "#18181b", fontWeight: 700, fontSize: "0.9rem", fontFamily: "'Plus Jakarta Sans', sans-serif", display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                  10,000+ organizers trust EventKH
+                  <img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f1f0-1f1ed.png" alt="🇰🇭" style={{ width: "1.1em", height: "1.1em", objectFit: "contain" }} />
                 </div>
-                <div style={{ color: "#475569", fontSize: "0.78rem" }}>
+                <div style={{ color: "#52525b", fontSize: "0.78rem" }}>
                   ⭐⭐⭐⭐⭐ &nbsp;Rated #1 in Cambodia
                 </div>
               </div>

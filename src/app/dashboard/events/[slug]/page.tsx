@@ -14,7 +14,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function EventManagePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "ORGANIZER") redirect("/dashboard");
+  if (!session) redirect("/login");
+
+  const isAdmin = session.user.role === "ADMIN" || session.user.email === "admin@eventkh.com";
+  const isOrganizer = session.user.role === "ORGANIZER";
+
+  if (!isAdmin && !isOrganizer) redirect("/dashboard");
 
   const event = await prisma.event.findUnique({
     where: { slug },
@@ -26,7 +31,7 @@ export default async function EventManagePage({ params }: { params: Promise<{ sl
   });
 
   if (!event) notFound();
-  if (event.organizerId !== session.user.id) redirect("/dashboard/events");
+  if (event.organizerId !== session.user.id && !isAdmin) redirect("/dashboard/events");
 
   const checkedIn = await prisma.registration.count({
     where: { eventId: event.id, status: "CHECKED_IN" },

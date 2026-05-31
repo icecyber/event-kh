@@ -24,13 +24,14 @@ export async function GET(req: NextRequest, { params }: Ctx) {
 
   if (!registration) return Response.json({ error: "Not found" }, { status: 404 });
 
-  // Only organizer or attendee themselves can view
+  // Only organizer, attendee themselves or administrator can view
+  const isAdmin = session.user.role === "ADMIN" || session.user.email === "admin@eventkh.com";
   const isOwner = registration.attendeeId === session.user.id;
   const isOrganizer =
     session.user.role === "ORGANIZER" &&
     registration.event.organizerId === session.user.id;
 
-  if (!isOwner && !isOrganizer) {
+  if (!isOwner && !isOrganizer && !isAdmin) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -40,7 +41,14 @@ export async function GET(req: NextRequest, { params }: Ctx) {
 // PATCH /api/events/[id]/registrations/[regId] — undo check-in
 export async function PATCH(req: NextRequest, { params }: Ctx) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "ORGANIZER") {
+  if (!session) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const isAdmin = session.user.role === "ADMIN" || session.user.email === "admin@eventkh.com";
+  const isOrganizer = session.user.role === "ORGANIZER";
+
+  if (!isOrganizer && !isAdmin) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -53,7 +61,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   });
 
   if (!registration) return Response.json({ error: "Not found" }, { status: 404 });
-  if (registration.event.organizerId !== session.user.id) {
+  if (registration.event.organizerId !== session.user.id && !isAdmin) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -75,7 +83,14 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
 // DELETE /api/events/[id]/registrations/[regId]
 export async function DELETE(req: NextRequest, { params }: Ctx) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "ORGANIZER") {
+  if (!session) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const isAdmin = session.user.role === "ADMIN" || session.user.email === "admin@eventkh.com";
+  const isOrganizer = session.user.role === "ORGANIZER";
+
+  if (!isOrganizer && !isAdmin) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -87,7 +102,7 @@ export async function DELETE(req: NextRequest, { params }: Ctx) {
   });
 
   if (!registration) return Response.json({ error: "Not found" }, { status: 404 });
-  if (registration.event.organizerId !== session.user.id) {
+  if (registration.event.organizerId !== session.user.id && !isAdmin) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
