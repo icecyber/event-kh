@@ -76,8 +76,8 @@ export default function Home() {
   return (
     <main>
       {/* ══ HERO ═══════════════════════════════════════════════════ */}
-      <section className="hero" style={{ position: "relative", overflow: "hidden", minHeight: "55vh", display: "flex", alignItems: "center", justifyContent: "flex-start", padding: "3.5rem 0" }}>
-        {/* Subtle, clearer background YouTube Video */}
+      <section className="hero" style={{ position: "relative", overflow: "hidden", minHeight: "55vh", display: "flex", alignItems: "center", justifyContent: "flex-start", padding: "3.5rem 0", background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)", borderBottom: "1px solid var(--gray-200)" }}>
+        {/* Subtle, clearer background YouTube Video on a bright background */}
         <div style={{
           position: "absolute",
           top: 0,
@@ -87,7 +87,7 @@ export default function Home() {
           pointerEvents: "none",
           zIndex: 0,
           overflow: "hidden",
-          opacity: 0.7, /* Subtle and modern 10% opacity video texture */
+          opacity: 0.12, /* Very soft and light moving texture */
         }}>
           <iframe
             src="https://www.youtube.com/embed/Vs_Fmf7Bzt8?autoplay=1&mute=1&loop=1&playlist=Vs_Fmf7Bzt8&start=4&controls=0&showinfo=0&rel=0&iv_load_policy=3&playsinline=1&enablejsapi=1&modestbranding=1&fs=0&disablekb=1"
@@ -105,11 +105,11 @@ export default function Home() {
               pointerEvents: "none",
             }}
           />
-          {/* Fading gradient overlay: deep contrast on the left for text, completely transparent on the right for video clarity */}
+          {/* Fading bright overlay: clean soft white contrast on the left, fully clear on the right */}
           <div style={{
             position: "absolute",
             inset: 0,
-            background: "linear-gradient(90deg, rgba(10, 22, 40, 0.9) 0%, rgba(10, 22, 40, 0.78) 45%, rgba(10, 22, 40, 0.25) 80%, rgba(10, 22, 40, 0) 100%)",
+            background: "linear-gradient(90deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.85) 45%, rgba(255, 255, 255, 0.3) 80%, rgba(255, 255, 255, 0) 100%)",
             zIndex: 1,
             pointerEvents: "none",
           }} />
@@ -118,32 +118,32 @@ export default function Home() {
         <div className="hero-content" style={{ position: "relative", zIndex: 2, width: "100%" }}>
           <div style={{ maxWidth: 840, marginRight: "auto", marginLeft: 0, textAlign: "left", display: "flex", flexDirection: "column", alignItems: "flex-start", padding: "0 1.5rem 0 4.5rem" }}>
             <div style={{ marginBottom: "1.25rem" }}>
-              <span className="badge badge-sky" style={{ padding: "0.4rem 1.1rem", fontSize: "0.85rem", backdropFilter: "blur(4px)", background: "rgba(14, 165, 243, 0.25)", color: "#e0f2fe", border: "1px solid rgba(14, 165, 243, 0.4)" }}>
+              <span className="badge badge-sky" style={{ padding: "0.4rem 1.1rem", fontSize: "0.85rem", backdropFilter: "blur(4px)", background: "rgba(14, 165, 243, 0.12)", color: "var(--brand-700)", border: "1px solid rgba(14, 165, 243, 0.25)" }}>
                 🇰🇭 &nbsp;EventKH
               </span>
             </div>
 
-            <h1 style={{ fontSize: "3.5rem", lineHeight: 1.15, fontWeight: 800, color: "#ffffff", marginBottom: "1.25rem", letterSpacing: "-0.03em", textShadow: "0 2px 12px rgba(0, 0, 0, 0.5)" }}>
+            <h1 style={{ fontSize: "3.5rem", lineHeight: 1.15, fontWeight: 800, color: "#0f172a", marginBottom: "1.25rem", letterSpacing: "-0.03em" }}>
               The smartest way to manage{" "}
-              <span className="hero-highlight">events in Cambodia 🇰🇭</span>
+              <span className="hero-highlight" style={{ background: "linear-gradient(135deg, var(--brand-600) 0%, var(--brand-800) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>events in Cambodia 🇰🇭</span>
             </h1>
 
-            <p style={{ fontSize: "1.2rem", color: "rgba(255, 255, 255, 0.95)", marginBottom: "2.5rem", maxWidth: 620, lineHeight: 1.6, textShadow: "0 1px 8px rgba(0, 0, 0, 0.4)" }}>
+            <p style={{ fontSize: "1.2rem", color: "#334155", marginBottom: "2.5rem", maxWidth: 620, lineHeight: 1.6 }}>
               {t("home.heroDesc")}
             </p>
 
             <div className="hero-actions" style={{ justifyContent: "flex-start" }}>
               <Link href="/register" className="btn btn-xl" style={{
-                background: "#fff", color: "var(--blue-700)",
-                fontWeight: 700, boxShadow: "0 4px 24px rgba(0,0,0,0.2)",
+                background: "var(--brand-600)", color: "#fff",
+                fontWeight: 700, boxShadow: "0 4px 24px rgba(9, 131, 239, 0.22)",
               }}>
                 🚀 {t("home.getStarted")}
               </Link>
               <Link href="/events" className="btn btn-xl" style={{
-                background: "rgba(255,255,255,0.12)",
-                color: "#fff",
-                border: "1.5px solid rgba(255,255,255,0.25)",
-                backdropFilter: "blur(8px)",
+                background: "#fff",
+                color: "var(--gray-700)",
+                border: "1.5px solid var(--gray-300)",
+                boxShadow: "var(--shadow-sm)",
               }}>
                 📅 {t("home.browseEvents")}
               </Link>
@@ -153,8 +153,8 @@ export default function Home() {
             <div style={{
               marginTop: "3.5rem", display: "flex", alignItems: "center", gap: "0.875rem",
               padding: "0.875rem 1.25rem",
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.1)",
+              background: "rgba(15, 23, 42, 0.04)",
+              border: "1px solid rgba(15, 23, 42, 0.08)",
               borderRadius: "0.875rem", backdropFilter: "blur(8px)",
               width: "fit-content",
               marginRight: "auto",
@@ -167,15 +167,15 @@ export default function Home() {
                     background: `hsl(${200 + i * 30}, 70%, 55%)`,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontSize: "1rem", marginLeft: i > 0 ? "-8px" : 0,
-                    border: "2px solid rgba(255,255,255,0.3)",
+                    border: "2px solid #fff",
                   }}>{e}</span>
                 ))}
               </div>
               <div style={{ textAlign: "left" }}>
-                <div style={{ color: "#fff", fontWeight: 700, fontSize: "0.9rem", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                <div style={{ color: "#0f172a", fontWeight: 700, fontSize: "0.9rem", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                   10,000+ organizers trust EventKH 🇰🇭
                 </div>
-                <div style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.78rem" }}>
+                <div style={{ color: "#475569", fontSize: "0.78rem" }}>
                   ⭐⭐⭐⭐⭐ &nbsp;Rated #1 in Cambodia
                 </div>
               </div>
