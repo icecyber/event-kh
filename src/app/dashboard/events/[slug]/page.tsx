@@ -5,19 +5,19 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import EventManagementClient from "./EventManagementClient";
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const event = await prisma.event.findUnique({ where: { id } });
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const event = await prisma.event.findUnique({ where: { slug } });
   return { title: event ? `Manage: ${event.title} — EventKH` : "Event Management — EventKH" };
 }
 
-export default async function EventManagePage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default async function EventManagePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "ORGANIZER") redirect("/dashboard");
 
   const event = await prisma.event.findUnique({
-    where: { id },
+    where: { slug },
     include: {
       ticketTypes: true,
       customFields: { orderBy: { order: "asc" } },
@@ -29,13 +29,14 @@ export default async function EventManagePage({ params }: { params: Promise<{ id
   if (event.organizerId !== session.user.id) redirect("/dashboard/events");
 
   const checkedIn = await prisma.registration.count({
-    where: { eventId: id, status: "CHECKED_IN" },
+    where: { eventId: event.id, status: "CHECKED_IN" },
   });
 
   return (
     <EventManagementClient
       event={{
         id: event.id,
+        slug: event.slug,
         title: event.title,
         description: event.description,
         date: event.date.toISOString(),

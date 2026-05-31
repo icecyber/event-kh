@@ -4,21 +4,21 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import EventDetailClient from "./EventDetailClient";
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const event = await prisma.event.findUnique({ where: { id } });
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const event = await prisma.event.findUnique({ where: { slug } });
   return {
     title: event ? `${event.title} — EventKH` : "Event — EventKH",
     description: event?.description ?? undefined,
   };
 }
 
-export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default async function EventDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const session = await getServerSession(authOptions);
 
   const event = await prisma.event.findUnique({
-    where: { id, isPublished: true },
+    where: { slug, isPublished: true },
     include: {
       organizer: { select: { name: true } },
       ticketTypes: true,
@@ -32,7 +32,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   let existingRegId: string | null = null;
   if (session) {
     const reg = await prisma.registration.findFirst({
-      where: { eventId: id, attendeeId: session.user.id },
+      where: { eventId: event.id, attendeeId: session.user.id },
       select: { id: true },
     });
     existingRegId = reg?.id ?? null;
@@ -56,6 +56,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
     <EventDetailClient
       ev={{
         id: event.id,
+        slug: event.slug,
         title: event.title,
         description: event.description,
         dateDisplay,

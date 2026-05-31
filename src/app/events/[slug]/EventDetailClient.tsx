@@ -6,6 +6,7 @@ import RegistrationForm from "./register/RegistrationForm";
 
 interface EventDetailProps {
   id: string;
+  slug: string;
   title: string;
   description?: string | null;
   dateDisplay: string;
@@ -72,7 +73,7 @@ export default function EventDetailClient({ ev }: { ev: EventDetailProps }) {
               <div className="alert alert-success" style={{ marginBottom: "1rem" }}>
                 {t("event.alreadyRegistered")}
               </div>
-              <Link href={`/events/${ev.id}/confirmation/${ev.existingRegId}`} className="btn btn-primary" style={{ display: "inline-flex", justifyContent: "center" }}>
+              <Link href={`/events/${ev.slug}/confirmation/${ev.existingRegId}`} className="btn btn-primary" style={{ display: "inline-flex", justifyContent: "center" }}>
                 {t("event.viewTicket")}
               </Link>
             </div>
@@ -90,6 +91,7 @@ export default function EventDetailClient({ ev }: { ev: EventDetailProps }) {
               <RegistrationForm
                 eventData={{
                   id: ev.id,
+                  slug: ev.slug,
                   title: ev.title,
                   date: ev.dateISO,
                   location: ev.location ?? undefined,

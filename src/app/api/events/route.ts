@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { NextRequest } from "next/server";
+import { generateUniqueSlug } from "@/lib/slug";
 
 // GET /api/events — list all published events (public)
 export async function GET(request: NextRequest) {
@@ -67,8 +68,11 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
 
+    const slug = await generateUniqueSlug(title);
+
     const event = await prisma.event.create({
       data: {
+        slug,
         title,
         description,
         date: new Date(date),

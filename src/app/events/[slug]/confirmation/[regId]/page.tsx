@@ -11,9 +11,9 @@ export const metadata = { title: "Registration Confirmed — EventKH" };
 export default async function ConfirmationPage({
   params,
 }: {
-  params: Promise<{ id: string; regId: string }>;
+  params: Promise<{ slug: string; regId: string }>;
 }) {
-  const { id: eventId, regId } = await params;
+  const { slug, regId } = await params;
   const session = await getServerSession(authOptions);
 
   const registration = await prisma.registration.findUnique({
@@ -27,6 +27,7 @@ export default async function ConfirmationPage({
   });
 
   if (!registration) notFound();
+  if (registration.event.slug !== slug) notFound();
 
   // Access control:
   // - Guest registrations (no attendeeId) are accessible to anyone with the URL
@@ -34,7 +35,7 @@ export default async function ConfirmationPage({
   const isGuestRegistration = !registration.attendeeId;
   if (!isGuestRegistration) {
     if (!session) {
-      redirect(`/login?callbackUrl=/events/${eventId}/confirmation/${regId}`);
+      redirect(`/login?callbackUrl=/events/${slug}/confirmation/${regId}`);
     }
     const isOwner = registration.attendeeId === session.user.id;
     const isOrganizer =
@@ -163,9 +164,9 @@ export default async function ConfirmationPage({
 
         {/* Actions */}
         <div style={{ marginTop: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          <BadgeDownloadButton eventId={eventId} regId={regId} attendeeName={attendeeName} />
+          <BadgeDownloadButton eventId={registration.eventId} regId={regId} attendeeName={attendeeName} />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-            <Link href={`/events/${eventId}`} className="btn btn-secondary" style={{ justifyContent: "center" }}>
+            <Link href={`/events/${slug}`} className="btn btn-secondary" style={{ justifyContent: "center" }}>
               ← Back to Event
             </Link>
             {session ? (

@@ -20,6 +20,7 @@ export default async function EventsPage() {
 
   const serialized = events.map((e) => ({
     id: e.id,
+    slug: e.slug,
     title: e.title,
     date: e.date.toISOString(),
     startTime: e.startTime,

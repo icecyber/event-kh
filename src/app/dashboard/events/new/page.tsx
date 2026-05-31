@@ -175,7 +175,7 @@ export default function CreateEventPage() {
       const data = await res.json();
       if (!res.ok) { setError(data.error || "Failed to create event"); return; }
 
-      router.push(`/dashboard/events/${data.id}`);
+      router.push(`/dashboard/events/${data.slug}`);
     } catch {
       setError("Network error. Please try again.");
     } finally {

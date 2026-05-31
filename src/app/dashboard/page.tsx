@@ -114,7 +114,11 @@ export default async function DashboardPage() {
                     <tbody>
                       {recentEvents.map((ev) => (
                         <tr key={ev.id}>
-                          <td style={{ fontWeight: 600, color: "var(--gray-900)" }}>{ev.title}</td>
+                          <td style={{ fontWeight: 600, color: "var(--gray-900)" }}>
+                            <Link href={`/events/${ev.slug}`} target="_blank" rel="noopener noreferrer" className="hover-underline" style={{ color: "inherit", textDecoration: "none" }}>
+                              {ev.title}
+                            </Link>
+                          </td>
                           <td>{new Date(ev.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</td>
                           <td>{ev._count.registrations}</td>
                           <td>
@@ -125,7 +129,7 @@ export default async function DashboardPage() {
                             )}
                           </td>
                           <td>
-                            <Link href={`/dashboard/events/${ev.id}`} className="btn btn-ghost btn-sm">Manage →</Link>
+                            <Link href={`/dashboard/events/${ev.slug}`} className="btn btn-ghost btn-sm">Manage →</Link>
                           </td>
                         </tr>
                       ))}
@@ -163,7 +167,11 @@ export default async function DashboardPage() {
                   <tbody>
                     {myRegistrations.map((reg) => (
                       <tr key={reg.id}>
-                        <td style={{ fontWeight: 600, color: "var(--gray-900)" }}>{reg.event.title}</td>
+                        <td style={{ fontWeight: 600, color: "var(--gray-900)" }}>
+                          <Link href={`/events/${reg.event.slug}`} className="hover-underline" style={{ color: "inherit", textDecoration: "none" }}>
+                            {reg.event.title}
+                          </Link>
+                        </td>
                         <td>{new Date(reg.event.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</td>
                         <td><span className="badge badge-purple">{reg.ticketType.name}</span></td>
                         <td>
@@ -174,7 +182,7 @@ export default async function DashboardPage() {
                           )}
                         </td>
                         <td>
-                          <Link href={`/events/${reg.eventId}/confirmation/${reg.id}`} className="btn btn-ghost btn-sm">View Ticket →</Link>
+                          <Link href={`/events/${reg.event.slug}/confirmation/${reg.id}`} className="btn btn-ghost btn-sm">View Ticket →</Link>
                         </td>
                       </tr>
                     ))}

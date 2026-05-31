@@ -6,6 +6,7 @@ import Link from "next/link";
 
 interface EventData {
   id: string;
+  slug: string;
   title: string;
   description?: string | null;
   date: string;
@@ -229,7 +230,7 @@ export default function BadgeDesignerTab({ event }: { event: EventData }) {
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
             <Link
-              href={`/dashboard/events/${event.id}/print-badges`}
+              href={`/dashboard/events/${event.slug}/print-badges`}
               className="btn btn-secondary"
               target="_blank"
               style={{ justifyContent: "center", textDecoration: "none" }}

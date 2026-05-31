@@ -23,6 +23,7 @@ interface TicketType {
 
 interface EventData {
   id: string;
+  slug: string;
   title: string;
   date: string;
   location?: string;
@@ -96,14 +97,14 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
 
       if (!res.ok) {
         if (res.status === 409 && data.registrationId) {
-          router.push(`/events/${eventData.id}/confirmation/${data.registrationId}`);
+          router.push(`/events/${eventData.slug}/confirmation/${data.registrationId}`);
           return;
         }
         setError(data.error || "Registration failed. Please try again.");
         return;
       }
 
-      router.push(`/events/${eventData.id}/confirmation/${data.id}`);
+      router.push(`/events/${eventData.slug}/confirmation/${data.id}`);
     } catch {
       setError("Network error. Please try again.");
     } finally {

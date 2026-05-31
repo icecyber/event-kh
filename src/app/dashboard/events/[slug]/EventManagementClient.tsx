@@ -11,6 +11,7 @@ import BadgeDesignerTab from "./BadgeDesignerTab";
 
 interface EventData {
   id: string;
+  slug: string;
   title: string;
   description?: string | null;
   date: string;
@@ -40,11 +41,11 @@ export default function EventManagementClient({ event }: { event: EventData }) {
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
   const [isPublished, setIsPublished] = useState(event.isPublished);
   const [publishing, setPublishing] = useState(false);
-  const [shareUrl, setShareUrl] = useState(`/events/${event.id}/register`);
+  const [shareUrl, setShareUrl] = useState(`/events/${event.slug}/register`);
 
   useEffect(() => {
-    setShareUrl(`${window.location.origin}/events/${event.id}/register`);
-  }, [event.id]);
+    setShareUrl(`${window.location.origin}/events/${event.slug}/register`);
+  }, [event.slug]);
 
   const togglePublish = async () => {
     setPublishing(true);
@@ -102,7 +103,7 @@ export default function EventManagementClient({ event }: { event: EventData }) {
               {publishing ? <span className="spinner spinner-dark" /> : isPublished ? "📴 Unpublish" : "🚀 Publish"}
             </button>
             <Link
-              href={`/events/${event.id}`}
+              href={`/events/${event.slug}`}
               className="btn btn-ghost"
               target="_blank"
               rel="noopener noreferrer"
@@ -218,7 +219,7 @@ export default function EventManagementClient({ event }: { event: EventData }) {
           </div>
         )}
 
-        {activeTab === "Participants" && <ParticipantsTab eventId={event.id} />}
+        {activeTab === "Participants" && <ParticipantsTab eventId={event.id} eventSlug={event.slug} />}
 
         {activeTab === "Redeem" && <RedeemTab eventId={event.id} />}
 

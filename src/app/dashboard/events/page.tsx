@@ -65,7 +65,11 @@ export default async function OrganizerEventsPage() {
                     return (
                       <tr key={ev.id}>
                         <td>
-                          <div style={{ fontWeight: 600, color: "var(--gray-900)" }}>{ev.title}</div>
+                          <div style={{ fontWeight: 600, color: "var(--gray-900)" }}>
+                            <Link href={`/events/${ev.slug}`} target="_blank" rel="noopener noreferrer" className="hover-underline" style={{ color: "inherit", textDecoration: "none" }}>
+                              {ev.title}
+                            </Link>
+                          </div>
                           <div style={{ fontSize: "0.78rem", color: "var(--gray-400)", marginTop: 2 }}>
                             {ev.ticketTypes.map((t) => t.name).join(", ")}
                           </div>
@@ -92,7 +96,7 @@ export default async function OrganizerEventsPage() {
                           )}
                         </td>
                         <td>
-                          <Link href={`/dashboard/events/${ev.id}`} className="btn btn-ghost btn-sm">Manage →</Link>
+                          <Link href={`/dashboard/events/${ev.slug}`} className="btn btn-ghost btn-sm">Manage →</Link>
                         </td>
                       </tr>
                     );

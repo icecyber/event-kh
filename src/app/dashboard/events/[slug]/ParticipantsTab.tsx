@@ -19,8 +19,10 @@ interface Participant {
 
 export default function ParticipantsTab({
   eventId,
+  eventSlug,
 }: {
   eventId: string;
+  eventSlug: string;
 }) {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [total, setTotal] = useState(0);
@@ -176,7 +178,7 @@ export default function ParticipantsTab({
         <button id="export-csv-btn" className="btn btn-secondary" onClick={handleExportCSV}>⬇️ Export CSV</button>
         <button id="print-participants-btn" className="btn btn-secondary" onClick={handlePrintList}>🖨️ Print List</button>
         <a
-          href={`/dashboard/events/${eventId}/print-badges`}
+          href={`/dashboard/events/${eventSlug}/print-badges`}
           target="_blank"
           id="print-badges-btn"
           className="btn btn-secondary"

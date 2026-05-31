@@ -3,21 +3,21 @@ import { authOptions } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 
-type Ctx = { params: Promise<{ id: string }> };
+type Ctx = { params: Promise<{ slug: string }> };
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const event = await prisma.event.findUnique({ where: { id } });
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const event = await prisma.event.findUnique({ where: { slug } });
   return { title: event ? `Print Badges: ${event.title} — EventKH` : "Print Badges — EventKH" };
 }
 
 export default async function PrintBadgesPage({ params }: Ctx) {
-  const { id: eventId } = await params;
+  const { slug } = await params;
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "ORGANIZER") redirect("/login");
 
   const event = await prisma.event.findUnique({
-    where: { id: eventId },
+    where: { slug },
     include: { registrations: { include: { attendee: true, ticketType: true } } },
   });
 
@@ -172,7 +172,7 @@ export default async function PrintBadgesPage({ params }: Ctx) {
             <p>Ready to export/print {registrations.length} badges for {event.title}.</p>
           </div>
           <div className="btn-group">
-            <a href={`/dashboard/events/${event.id}`} className="btn-back">
+            <a href={`/dashboard/events/${event.slug}`} className="btn-back">
               ← Dashboard
             </a>
             <button className="btn-print" onClick={() => window.print()}>

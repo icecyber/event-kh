@@ -6,6 +6,7 @@ import TranslateText from "@/components/TranslateText";
 
 interface EventItem {
   id: string;
+  slug: string;
   title: string;
   date: string;
   startTime?: string | null;
@@ -41,7 +42,7 @@ export default function EventsList({ events }: { events: EventItem[] }) {
           : false;
 
         return (
-          <Link key={event.id} href={`/events/${event.id}`} style={{ textDecoration: "none" }}>
+          <Link key={event.id} href={`/events/${event.slug}`} style={{ textDecoration: "none" }}>
             <div className="event-card">
               <div className="event-card-banner">
                 {event.bannerImageURL ? (
