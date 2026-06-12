@@ -11,7 +11,7 @@ export const metadata = {
 
 export default async function AttendeeMatchmakingPage() {
   const session = await getServerSession(authOptions);
-  if (!session) redirect("/login");
+  if (!session || !session.user?.email) redirect("/login");
 
   // Query appointments that match the logged-in user's email
   const appointments = await prisma.appointment.findMany({
