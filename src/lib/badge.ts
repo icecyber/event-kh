@@ -23,6 +23,7 @@ export interface BadgeOptions {
   badgeEnabled?: boolean;   // if false, always use default gradient
   badgeSize?: string;        // "A3" | "2*3" | "3*4"
   badgeOrientation?: string; // "horizontal" | "vertical"
+  qrCodeString?: string;
 }
 
 /** Returns canvas pixel dimensions for a given size and orientation */
@@ -71,7 +72,7 @@ export async function generateBadgePNG(opts: BadgeOptions): Promise<Buffer> {
   }
 
   // --- Generate QR code ---
-  const qrBuf = await generateQRCodeBuffer(opts.eventTitle + "|" + opts.attendeeName);
+  const qrBuf = await generateQRCodeBuffer(opts.qrCodeString || (opts.eventTitle + "|" + opts.attendeeName));
   const qrImg = await loadImage(qrBuf);
 
   if (orientation === "vertical") {

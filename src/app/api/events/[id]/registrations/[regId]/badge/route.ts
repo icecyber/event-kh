@@ -52,6 +52,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
     badgeEnabled: event.badgeEnabled,
     badgeSize: event.badgeSize,
     badgeOrientation: event.badgeOrientation,
+    qrCodeString: registration.qrCodeString || undefined,
   });
 
   // Mark badge as issued
