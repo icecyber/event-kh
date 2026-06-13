@@ -3,6 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+interface EditableCustomField {
+  id?: string;
+  label: string;
+  fieldType: string;
+  required: boolean;
+  options?: string | null;
+}
+
 interface EditableEvent {
   id: string;
   title: string;
@@ -19,7 +27,16 @@ interface EditableEvent {
   badgeSize: string;
   badgeOrientation: string;
   eventType: string;
+  customFields?: EditableCustomField[];
 }
+
+const FIELD_TYPES = [
+  { value: "text", label: "Short Text" },
+  { value: "textarea", label: "Long Text" },
+  { value: "select", label: "Dropdown" },
+  { value: "checkbox", label: "Checkbox (Yes/No)" },
+  { value: "number", label: "Number" },
+];
 
 export default function EditEventForm({ event, onSaved }: { event: EditableEvent; onSaved?: () => void }) {
   const router = useRouter();
@@ -41,6 +58,41 @@ export default function EditEventForm({ event, onSaved }: { event: EditableEvent
   const [badgeSize, setBadgeSize] = useState(event.badgeSize);
   const [badgeOrientation, setBadgeOrientation] = useState(event.badgeOrientation);
   const [badgeBackgroundURL, setBadgeBackgroundURL] = useState(event.badgeBackgroundURL ?? "");
+
+  // Custom Fields (Questions) State
+  const [fields, setFields] = useState<EditableCustomField[]>(() => {
+    return (event.customFields ?? []).map((f) => {
+      let optionsStr = "";
+      if (f.options) {
+        try {
+          const parsed = JSON.parse(f.options);
+          if (Array.isArray(parsed)) {
+            optionsStr = parsed.join(", ");
+          } else {
+            optionsStr = String(f.options);
+          }
+        } catch {
+          optionsStr = String(f.options);
+        }
+      }
+      return {
+        id: f.id,
+        label: f.label,
+        fieldType: f.fieldType,
+        required: f.required,
+        options: optionsStr,
+      };
+    });
+  });
+
+  const addField = () =>
+    setFields([...fields, { label: "", fieldType: "text", required: false, options: "" }]);
+  const removeField = (i: number) => setFields(fields.filter((_, idx) => idx !== i));
+  const updateField = (i: number, key: keyof EditableCustomField, val: any) => {
+    const copy = [...fields];
+    copy[i] = { ...copy[i], [key]: val } as EditableCustomField;
+    setFields(copy);
+  };
 
   // Banner upload
   const [uploading, setUploading] = useState(false);
@@ -100,6 +152,16 @@ export default function EditEventForm({ event, onSaved }: { event: EditableEvent
           badgeSize,
           badgeOrientation,
           badgeBackgroundURL: badgeBackgroundURL || null,
+          customFields: fields.map((f, idx) => ({
+            id: f.id,
+            label: f.label,
+            fieldType: f.fieldType,
+            required: f.required,
+            options: f.fieldType === "select" && f.options
+              ? f.options.split(",").map((o) => o.trim()).filter(Boolean)
+              : undefined,
+            order: idx,
+          })),
         }),
       });
 
@@ -272,6 +334,126 @@ export default function EditEventForm({ event, onSaved }: { event: EditableEvent
             </div>
           </div>
         )}
+      </div>
+
+      {/* Custom Fields (Registration Questions) */}
+      <div style={sectionStyle}>
+        <h4 style={{ marginBottom: "0.25rem", color: "var(--gray-900)" }}>📋 Registration Questions</h4>
+        <p style={{ color: "var(--gray-500)", fontSize: "0.85rem", marginBottom: "1.25rem" }}>
+          Add, edit, or remove questions asked to attendees when registering for this event.
+        </p>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          {fields.length === 0 ? (
+            <div style={{ 
+              padding: "1.5rem", 
+              textAlign: "center", 
+              border: "2px dashed var(--gray-300)", 
+              borderRadius: "0.5rem",
+              background: "#fff",
+              color: "var(--gray-400)",
+              fontSize: "0.9rem"
+            }}>
+              No custom questions yet. Attendees only need to provide basic details (name, email/phone).
+            </div>
+          ) : (
+            fields.map((f, i) => (
+              <div 
+                key={i} 
+                style={{ 
+                  background: "#fff",
+                  border: "1px solid var(--gray-200)", 
+                  borderRadius: "0.75rem", 
+                  padding: "1.25rem", 
+                  display: "flex", 
+                  flexDirection: "column", 
+                  gap: "0.75rem",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
+                  position: "relative"
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <h5 style={{ color: "var(--gray-700)", fontWeight: 600, margin: 0 }}>Question #{i + 1}</h5>
+                  <button 
+                    type="button" 
+                    className="btn btn-danger btn-sm" 
+                    style={{ padding: "0.25rem 0.6rem", fontSize: "0.75rem" }}
+                    onClick={() => removeField(i)}
+                  >
+                    🗑️ Remove
+                  </button>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "0.75rem" }}>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label" style={labelStyle}>Question Label <span className="req">*</span></label>
+                    <input 
+                      className="form-input" 
+                      value={f.label} 
+                      onChange={(e) => updateField(i, "label", e.target.value)} 
+                      placeholder="e.g. Dietary Requirements" 
+                      required
+                    />
+                  </div>
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label" style={labelStyle}>Type</label>
+                    <select 
+                      className="form-select" 
+                      value={f.fieldType} 
+                      onChange={(e) => updateField(i, "fieldType", e.target.value)}
+                    >
+                      {FIELD_TYPES.map((ft) => (
+                        <option key={ft.value} value={ft.value}>{ft.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                {f.fieldType === "select" && (
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label" style={labelStyle}>Options (comma-separated)</label>
+                    <input 
+                      className="form-input" 
+                      value={f.options ?? ""} 
+                      onChange={(e) => updateField(i, "options", e.target.value)} 
+                      placeholder="Option 1, Option 2, Option 3" 
+                      required
+                    />
+                  </div>
+                )}
+                <label style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "0.85rem", alignSelf: "flex-start", marginTop: "0.25rem" }}>
+                  <input 
+                    type="checkbox" 
+                    checked={f.required} 
+                    onChange={(e) => updateField(i, "required", e.target.checked)} 
+                    style={{ accentColor: "var(--brand-600)", width: 16, height: 16 }} 
+                  />
+                  <span style={{ color: "var(--gray-600)", fontWeight: 500 }}>Required question</span>
+                </label>
+              </div>
+            ))
+          )}
+          
+          <button 
+            type="button" 
+            className="btn btn-secondary" 
+            onClick={addField} 
+            style={{ 
+              alignSelf: "flex-start", 
+              marginTop: "0.5rem",
+              background: "#fff",
+              border: "1px solid var(--gray-300)",
+              color: "var(--gray-700)",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.35rem",
+              padding: "0.5rem 1rem",
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+            }}
+          >
+            ➕ Add Question
+          </button>
+        </div>
       </div>
 
       {/* Status messages */}

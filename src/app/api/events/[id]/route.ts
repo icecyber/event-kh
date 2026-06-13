@@ -60,10 +60,73 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   if (body.badgeSize !== undefined) data.badgeSize = body.badgeSize;
   if (body.badgeOrientation !== undefined) data.badgeOrientation = body.badgeOrientation;
 
-  const updated = await prisma.event.update({
-    where: { id },
-    data,
-  });
+  let updated;
+  if (body.customFields !== undefined) {
+    const incomingFields = body.customFields || [];
+
+    // Get existing custom fields
+    const existingFields = await prisma.customField.findMany({
+      where: { eventId: id },
+    });
+    const existingIds = existingFields.map((f) => f.id);
+
+    // Identify fields to delete (exist in DB but not in payload)
+    const incomingIds = incomingFields
+      .map((f: { id?: string }) => f.id)
+      .filter(Boolean) as string[];
+    const toDeleteIds = existingIds.filter((eid) => !incomingIds.includes(eid));
+
+    updated = await prisma.$transaction(async (tx) => {
+      // 1. Delete answers for fields being deleted
+      if (toDeleteIds.length > 0) {
+        await tx.customFieldAnswer.deleteMany({
+          where: { customFieldId: { in: toDeleteIds } },
+        });
+        // 2. Delete fields
+        await tx.customField.deleteMany({
+          where: { id: { in: toDeleteIds } },
+        });
+      }
+
+      // 3. Update or create fields
+      for (const field of incomingFields) {
+        const fieldData = {
+          label: field.label,
+          fieldType: field.fieldType,
+          required: Boolean(field.required),
+          options: field.fieldType === "select" && field.options
+            ? JSON.stringify(field.options)
+            : null,
+          order: Number(field.order) || 0,
+        };
+
+        if (field.id) {
+          await tx.customField.update({
+            where: { id: field.id },
+            data: fieldData,
+          });
+        } else {
+          await tx.customField.create({
+            data: {
+              ...fieldData,
+              eventId: id,
+            },
+          });
+        }
+      }
+
+      // 4. Update the event basic info
+      return await tx.event.update({
+        where: { id },
+        data,
+      });
+    });
+  } else {
+    updated = await prisma.event.update({
+      where: { id },
+      data,
+    });
+  }
 
   return Response.json(updated);
 }
