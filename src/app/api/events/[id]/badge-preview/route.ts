@@ -37,6 +37,9 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   const size = searchParams.get("size") || "3*4";
   const orientation = searchParams.get("orientation") || "vertical";
   const bg = searchParams.get("bg") || "";
+  const qrX = searchParams.get("qrX") ? parseInt(searchParams.get("qrX")!) : undefined;
+  const qrY = searchParams.get("qrY") ? parseInt(searchParams.get("qrY")!) : undefined;
+  const qrSize = searchParams.get("qrSize") ? parseInt(searchParams.get("qrSize")!) : undefined;
 
   const dateStr = new Date(event.date).toLocaleDateString("en-US", {
     year: "numeric",
@@ -56,6 +59,9 @@ export async function GET(req: NextRequest, { params }: Ctx) {
     badgeEnabled: enabled,
     badgeSize: size,
     badgeOrientation: orientation,
+    badgeQrPositionX: qrX,
+    badgeQrPositionY: qrY,
+    badgeQrSize: qrSize,
   });
 
   return new Response(new Uint8Array(png), {

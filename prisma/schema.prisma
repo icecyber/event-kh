@@ -37,6 +37,9 @@ model Event {
   badgeEnabled       Boolean  @default(true)
   badgeSize          String   @default("3*4")        // A3 | 2*3 | 3*4
   badgeOrientation   String   @default("vertical")   // horizontal | vertical
+  badgeQrPositionX   Int      @default(50)
+  badgeQrPositionY   Int      @default(70)
+  badgeQrSize        Int      @default(25)
   isPublished        Boolean  @default(false)
   eventType          String   @default("STANDARD") // STANDARD or EXHIBITION
   endDate            DateTime?

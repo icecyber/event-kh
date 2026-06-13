@@ -22,9 +22,9 @@ export async function GET(req: NextRequest, { params }: Ctx) {
 
   if (!registration) return new Response("Not found", { status: 404 });
 
-  // Only attendee themselves, guest (if exhibition), or organizer can download
+  // Only attendee themselves, guest (if guest registration), or organizer can download
   const isOwner = session && registration.attendeeId === session.user.id;
-  const isGuestAllowed = registration.event.eventType === "EXHIBITION";
+  const isGuestAllowed = !registration.attendeeId;
   const isOrganizer = session &&
     session.user.role === "ORGANIZER" &&
     registration.event.organizerId === session.user.id;
@@ -53,6 +53,9 @@ export async function GET(req: NextRequest, { params }: Ctx) {
     badgeSize: event.badgeSize,
     badgeOrientation: event.badgeOrientation,
     qrCodeString: registration.qrCodeString || undefined,
+    badgeQrPositionX: event.badgeQrPositionX,
+    badgeQrPositionY: event.badgeQrPositionY,
+    badgeQrSize: event.badgeQrSize,
   });
 
   // Mark badge as issued

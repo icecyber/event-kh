@@ -20,6 +20,9 @@ interface EventData {
   badgeEnabled: boolean;
   badgeSize: string;
   badgeOrientation: string;
+  badgeQrPositionX: number;
+  badgeQrPositionY: number;
+  badgeQrSize: number;
   eventType: string;
   ticketTypes: { id: string; name: string; price: number }[];
 }
@@ -35,6 +38,9 @@ export default function BadgeDesignerTab({ event }: { event: EventData }) {
   const [badgeSize, setBadgeSize] = useState(event.badgeSize || "3*4");
   const [badgeOrientation, setBadgeOrientation] = useState(event.badgeOrientation || "vertical");
   const [badgeBackgroundURL, setBadgeBackgroundURL] = useState(event.badgeBackgroundURL || "");
+  const [badgeQrPositionX, setBadgeQrPositionX] = useState(event.badgeQrPositionX ?? 50);
+  const [badgeQrPositionY, setBadgeQrPositionY] = useState(event.badgeQrPositionY ?? 70);
+  const [badgeQrSize, setBadgeQrSize] = useState(event.badgeQrSize ?? 25);
   const [uploading, setUploading] = useState(false);
 
   const handleUpload = async (file: File) => {
@@ -69,6 +75,9 @@ export default function BadgeDesignerTab({ event }: { event: EventData }) {
           badgeSize,
           badgeOrientation,
           badgeBackgroundURL: badgeBackgroundURL || null,
+          badgeQrPositionX,
+          badgeQrPositionY,
+          badgeQrSize,
         }),
       });
 
@@ -175,6 +184,59 @@ export default function BadgeDesignerTab({ event }: { event: EventData }) {
           </div>
         )}
 
+        {badgeEnabled && badgeBackgroundURL && (
+          <div style={{ padding: "1.1rem", border: "1.5px solid var(--gray-200)", borderRadius: "0.75rem", background: "var(--gray-50)", display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block" }}>
+              🛠️ QR Code Positioning (Custom Badge)
+            </span>
+            
+            <div className="form-group" style={{ gap: "0.25rem" }}>
+              <label className="form-label" style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
+                <span>Horizontal Position (X)</span>
+                <strong style={{ color: "var(--brand-600)" }}>{badgeQrPositionX}%</strong>
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={badgeQrPositionX}
+                onChange={(e) => setBadgeQrPositionX(Number(e.target.value))}
+                style={{ width: "100%", accentColor: "var(--brand-600)" }}
+              />
+            </div>
+
+            <div className="form-group" style={{ gap: "0.25rem" }}>
+              <label className="form-label" style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
+                <span>Vertical Position (Y)</span>
+                <strong style={{ color: "var(--brand-600)" }}>{badgeQrPositionY}%</strong>
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={badgeQrPositionY}
+                onChange={(e) => setBadgeQrPositionY(Number(e.target.value))}
+                style={{ width: "100%", accentColor: "var(--brand-600)" }}
+              />
+            </div>
+
+            <div className="form-group" style={{ gap: "0.25rem" }}>
+              <label className="form-label" style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
+                <span>QR Code Size</span>
+                <strong style={{ color: "var(--brand-600)" }}>{badgeQrSize}%</strong>
+              </label>
+              <input
+                type="range"
+                min="10"
+                max="50"
+                value={badgeQrSize}
+                onChange={(e) => setBadgeQrSize(Number(e.target.value))}
+                style={{ width: "100%", accentColor: "var(--brand-600)" }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Layout Dimensions */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
           <div className="form-group">
@@ -238,7 +300,7 @@ export default function BadgeDesignerTab({ event }: { event: EventData }) {
               🖨️ Print All Badges
             </Link>
             <a
-              href={`/api/events/${event.id}/badge-preview?enabled=${badgeEnabled}&size=${badgeSize}&orientation=${badgeOrientation}&bg=${encodeURIComponent(badgeBackgroundURL)}`}
+              href={`/api/events/${event.id}/badge-preview?enabled=${badgeEnabled}&size=${badgeSize}&orientation=${badgeOrientation}&bg=${encodeURIComponent(badgeBackgroundURL)}&qrX=${badgeQrPositionX}&qrY=${badgeQrPositionY}&qrSize=${badgeQrSize}`}
               download={`mock-badge-${event.id}.png`}
               className="btn btn-ghost"
               style={{ justifyContent: "center", textDecoration: "none" }}
@@ -289,7 +351,49 @@ export default function BadgeDesignerTab({ event }: { event: EventData }) {
             </>
           )}
 
-          {isVertical ? (
+          {badgeEnabled && badgeBackgroundURL ? (
+            /* Custom Badge Simulator: ONLY show custom QR Code */
+            <div
+              style={{
+                position: "absolute",
+                left: `${badgeQrPositionX}%`,
+                top: `${badgeQrPositionY}%`,
+                transform: "translate(-50%, -50%)",
+                background: "#ffffff",
+                padding: "6px",
+                borderRadius: "6px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "2px",
+                width: `${badgeQrSize}%`,
+                maxWidth: "60%",
+                minWidth: "15%",
+                boxShadow: "0 4px 10px rgba(0,0,0,0.25)"
+              }}
+            >
+              <svg viewBox="0 0 100 100" style={{ fill: "#000", width: "100%", height: "auto", display: "block" }}>
+                <rect x="0" y="0" width="30" height="30" />
+                <rect x="5" y="5" width="20" height="20" fill="#fff" />
+                <rect x="10" y="10" width="10" height="10" />
+
+                <rect x="70" y="0" width="30" height="30" />
+                <rect x="75" y="5" width="20" height="20" fill="#fff" />
+                <rect x="80" y="10" width="10" height="10" />
+
+                <rect x="0" y="70" width="30" height="30" />
+                <rect x="5" y="75" width="20" height="20" fill="#fff" />
+                <rect x="10" y="80" width="10" height="10" />
+
+                <rect x="40" y="40" width="20" height="20" />
+                <rect x="45" y="10" width="15" height="15" />
+                <rect x="80" y="45" width="15" height="15" />
+                <rect x="15" y="45" width="10" height="15" />
+                <rect x="45" y="75" width="20" height="10" />
+                <rect x="75" y="75" width="10" height="15" />
+              </svg>
+            </div>
+          ) : isVertical ? (
             /* Vertical simulated layout */
             <div style={{ display: "flex", flexDirection: "column", height: "100%", width: "100%" }}>
               {/* Brand logo capsule */}

@@ -25,6 +25,9 @@ interface EventData {
   badgeEnabled: boolean;
   badgeSize: string;
   badgeOrientation: string;
+  badgeQrPositionX: number;
+  badgeQrPositionY: number;
+  badgeQrSize: number;
   eventType: string;
   isPublished: boolean;
   totalRegistrations: number;

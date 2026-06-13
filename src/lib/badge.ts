@@ -34,6 +34,9 @@ export interface BadgeOptions {
   badgeSize?: string;        // "A3" | "2*3" | "3*4"
   badgeOrientation?: string; // "horizontal" | "vertical"
   qrCodeString?: string;
+  badgeQrPositionX?: number;
+  badgeQrPositionY?: number;
+  badgeQrSize?: number;
 }
 
 /** Returns canvas pixel dimensions for a given size and orientation */
@@ -70,11 +73,14 @@ export async function generateBadgePNG(opts: BadgeOptions): Promise<Buffer> {
   const showCustomBg = opts.badgeEnabled !== false && opts.backgroundImageURL;
   if (showCustomBg) {
     try {
-      const bg = await loadImage(opts.backgroundImageURL!);
+      let bgPath = opts.backgroundImageURL!;
+      if (bgPath.startsWith("/") && !bgPath.startsWith("//")) {
+        bgPath = path.join(process.cwd(), "public", bgPath);
+      }
+      const bg = await loadImage(bgPath);
       ctx.drawImage(bg, 0, 0, W, H);
-      ctx.fillStyle = "rgba(15, 10, 60, 0.58)";
-      ctx.fillRect(0, 0, W, H);
-    } catch {
+    } catch (err) {
+      console.error("Failed to load background image:", opts.backgroundImageURL, err);
       drawDefaultBackground(ctx, W, H);
     }
   } else {
@@ -85,10 +91,30 @@ export async function generateBadgePNG(opts: BadgeOptions): Promise<Buffer> {
   const qrBuf = await generateQRCodeBuffer(opts.qrCodeString || (opts.eventTitle + "|" + opts.attendeeName));
   const qrImg = await loadImage(qrBuf);
 
-  if (orientation === "vertical") {
-    await drawVertical(ctx, W, H, qrImg, opts);
+  if (showCustomBg) {
+    // Only draw QR code at custom position!
+    const qrPosX = opts.badgeQrPositionX ?? 50; // percentage
+    const qrPosY = opts.badgeQrPositionY ?? 70; // percentage
+    const qrSizePercent = opts.badgeQrSize ?? 25; // percentage of min(W, H)
+    
+    const qrSize = Math.round(Math.min(W, H) * (qrSizePercent / 100));
+    const qrX = Math.round(W * (qrPosX / 100) - qrSize / 2);
+    const qrY = Math.round(H * (qrPosY / 100) - qrSize / 2);
+
+    // Draw white background under QR code so it remains scannable
+    const padding = Math.round(qrSize * 0.08);
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.roundRect(qrX - padding, qrY - padding, qrSize + padding * 2, qrSize + padding * 2, Math.round(padding));
+    ctx.fill();
+
+    ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
   } else {
-    await drawHorizontal(ctx, W, H, qrImg, opts);
+    if (orientation === "vertical") {
+      await drawVertical(ctx, W, H, qrImg, opts);
+    } else {
+      await drawHorizontal(ctx, W, H, qrImg, opts);
+    }
   }
 
   return canvas.toBuffer("image/png");

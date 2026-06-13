@@ -48,6 +48,8 @@ export default async function ConfirmationPage({
     ? await generateQRCodeDataURL(registration.qrCodeString)
     : null;
 
+  const isCustomBadge = registration.event.badgeEnabled && registration.event.badgeBackgroundURL;
+
   const attendeeName = registration.attendee?.name || registration.guestName || "Guest Attendee";
 
   return (
@@ -69,12 +71,38 @@ export default async function ConfirmationPage({
           {/* Divider */}
           <div style={{ margin: "1.75rem 0", borderTop: "1px solid rgba(255,255,255,0.18)" }} />
 
-          {/* QR Code */}
-          <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)", marginBottom: "1rem" }}>
-            Your Entry QR Code
-          </p>
-          {qrDataURL ? (
+          {/* QR Code / Custom Badge */}
+          {isCustomBadge ? (
             <>
+              <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)", marginBottom: "1rem" }}>
+                Your Custom Event Badge
+              </p>
+              <div style={{
+                borderRadius: "1rem", overflow: "hidden", display: "inline-block",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.35)", maxWidth: "100%", border: "1px solid rgba(255,255,255,0.12)",
+                background: "#000", marginBottom: "1rem"
+              }}>
+                <img
+                  src={`/api/events/${registration.eventId}/registrations/${registration.id}/badge`}
+                  alt="Custom Badge"
+                  style={{
+                    width: "100%",
+                    maxWidth: 320,
+                    height: "auto",
+                    display: "block",
+                    margin: "0 auto",
+                  }}
+                />
+              </div>
+              <p style={{ fontSize: "0.82rem", color: "rgba(255,255,255,0.6)", margin: 0 }}>
+                Present this badge at the entrance to check in.
+              </p>
+            </>
+          ) : qrDataURL ? (
+            <>
+              <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)", marginBottom: "1rem" }}>
+                Your Entry QR Code
+              </p>
               <div style={{
                 background: "#fff",
                 padding: "1rem", borderRadius: "0.875rem", display: "inline-block",
