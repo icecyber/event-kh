@@ -15,7 +15,7 @@ export function RegisterPageHeader({
       <p style={{ fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.55)", marginBottom: "0.5rem" }}>
         {t("reg.title")}
       </p>
-      <h2 style={{ fontSize: "1.35rem", marginBottom: "0.75rem" }}>
+      <h2 style={{ fontSize: "1.35rem", marginBottom: "0.75rem", color: "#fff" }}>
         <TranslateText text={eventTitle} />
       </h2>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", fontSize: "0.875rem", color: "rgba(255,255,255,0.7)" }}>

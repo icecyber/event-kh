@@ -38,9 +38,20 @@ export default function EventDetailClient({ ev }: { ev: EventDetailProps }) {
   return (
     <main style={{ minHeight: "calc(100vh - 64px)" }}>
       {/* Banner */}
-      <div style={{ height: 320, position: "relative", overflow: "hidden" }}>
+      <div style={{
+        position: "relative",
+        overflow: "hidden",
+        width: "100%",
+        aspectRatio: "16 / 5",
+        minHeight: 180,
+        maxHeight: 400,
+      }}>
         {ev.bannerImageURL ? (
-          <img src={ev.bannerImageURL} alt={ev.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <img
+            src={ev.bannerImageURL}
+            alt={ev.title}
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+          />
         ) : (
           <div style={{
             width: "100%", height: "100%",
@@ -59,7 +70,7 @@ export default function EventDetailClient({ ev }: { ev: EventDetailProps }) {
           </span>
         </div>
         <div style={{ position: "absolute", bottom: "1.5rem", left: "50%", transform: "translateX(-50%)", color: "#fff", width: "100%", padding: "0 1.5rem" }}>
-          <h1 style={{ fontSize: "clamp(1.5rem, 4vw, 2.5rem)", margin: 0 }}>
+          <h1 style={{ fontSize: "clamp(1.25rem, 4vw, 2.5rem)", margin: 0, color: "#fff", textShadow: "0 2px 8px rgba(0,0,0,0.5)" }}>
             <TranslateText text={ev.title} />
           </h1>
         </div>
