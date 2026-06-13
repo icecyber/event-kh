@@ -1,5 +1,15 @@
-import { createCanvas, loadImage } from "canvas";
+import { createCanvas, loadImage, registerFont } from "canvas";
 import { generateQRCodeBuffer } from "./qr";
+import path from "path";
+
+// Pre-register fonts for environments that support dynamic loading (like Linux)
+try {
+  const fontsDir = path.join(process.cwd(), "src", "lib", "fonts");
+  registerFont(path.join(fontsDir, "Khmer.ttf"), { family: "Khmer" });
+  registerFont(path.join(fontsDir, "NotoSansKhmer.ttf"), { family: "Noto Sans Khmer" });
+} catch (e) {
+  console.warn("Failed to register custom fonts:", e);
+}
 
 /** Strip emoji characters that node-canvas can't render without an emoji font */
 function stripEmoji(str: string): string {
@@ -10,8 +20,8 @@ function stripEmoji(str: string): string {
     .trim();
 }
 
-/** Safe font string — Arial is present on Windows & most Linux servers with node-canvas */
-const FONT = "'Arial', 'Liberation Sans', sans-serif";
+/** Safe font stack with cross-platform fallback for English & Khmer */
+const FONT = "'Noto Sans Khmer', 'Khmer UI', 'Leelawadee UI', 'Khmer', 'Arial', 'Liberation Sans', sans-serif";
 
 export interface BadgeOptions {
   eventTitle: string;
