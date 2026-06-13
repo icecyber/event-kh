@@ -33,6 +33,52 @@ interface EventData {
   customFields: CustomField[];
 }
 
+const COUNTRY_CODES = [
+  { code: "+855", flag: "🇰🇭", name: "Cambodia" },
+  { code: "+66", flag: "🇹🇭", name: "Thailand" },
+  { code: "+84", flag: "🇻🇳", name: "Vietnam" },
+  { code: "+856", flag: "🇱🇦", name: "Laos" },
+  { code: "+65", flag: "🇸🇬", name: "Singapore" },
+  { code: "+60", flag: "🇲🇾", name: "Malaysia" },
+  { code: "+62", flag: "🇮🇩", name: "Indonesia" },
+  { code: "+63", flag: "🇵🇭", name: "Philippines" },
+  { code: "+95", flag: "🇲🇲", name: "Myanmar" },
+  { code: "+673", flag: "🇧🇳", name: "Brunei" },
+  { code: "+670", flag: "🇹🇱", name: "East Timor" },
+  { code: "+86", flag: "🇨🇳", name: "China" },
+  { code: "+852", flag: "🇭🇰", name: "Hong Kong" },
+  { code: "+886", flag: "🇹🇼", name: "Taiwan" },
+  { code: "+81", flag: "🇯🇵", name: "Japan" },
+  { code: "+82", flag: "🇰🇷", name: "South Korea" },
+  { code: "+91", flag: "🇮🇳", name: "India" },
+  { code: "+92", flag: "🇵🇰", name: "Pakistan" },
+  { code: "+880", flag: "🇧🇩", name: "Bangladesh" },
+  { code: "+94", flag: "🇱🇰", name: "Sri Lanka" },
+  { code: "+977", flag: "🇳🇵", name: "Nepal" },
+  { code: "+1", flag: "🇺🇸", name: "USA/Canada" },
+  { code: "+44", flag: "🇬🇧", name: "United Kingdom" },
+  { code: "+61", flag: "🇦🇺", name: "Australia" },
+  { code: "+64", flag: "🇳🇿", name: "New Zealand" },
+  { code: "+49", flag: "🇩🇪", name: "Germany" },
+  { code: "+33", flag: "🇫🇷", name: "France" },
+  { code: "+39", flag: "🇮🇹", name: "Italy" },
+  { code: "+34", flag: "🇪🇸", name: "Spain" },
+  { code: "+41", flag: "🇨🇭", name: "Switzerland" },
+  { code: "+31", flag: "🇳🇱", name: "Netherlands" },
+  { code: "+32", flag: "🇧🇪", name: "Belgium" },
+  { code: "+7", flag: "🇷🇺", name: "Russia" },
+  { code: "+90", flag: "🇹🇷", name: "Turkey" },
+  { code: "+966", flag: "🇸🇦", name: "Saudi Arabia" },
+  { code: "+971", flag: "🇦🇪", name: "UAE" },
+  { code: "+974", flag: "🇶🇦", name: "Qatar" },
+  { code: "+972", flag: "🇮🇱", name: "Israel" },
+  { code: "+55", flag: "🇧🇷", name: "Brazil" },
+  { code: "+52", flag: "🇲🇽", name: "Mexico" },
+  { code: "+27", flag: "🇿🇦", name: "South Africa" },
+  { code: "+20", flag: "🇪🇬", name: "Egypt" },
+  { code: "+234", flag: "🇳🇬", name: "Nigeria" }
+];
+
 export default function RegistrationForm({ eventData }: { eventData: EventData }) {
   const router = useRouter();
   const { data: session } = useSession();
@@ -46,11 +92,26 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
 
   // Core attendee info — always collected
   const [guestName, setGuestName] = useState(session?.user?.name ?? "");
+  const [countryCode, setCountryCode] = useState("+855");
   const [guestPhone, setGuestPhone] = useState("");
   const [guestEmail, setGuestEmail] = useState(session?.user?.email ?? "");
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  const getFullPhoneNumber = () => {
+    const trimmed = guestPhone.trim();
+    if (!trimmed) return "";
+    if (trimmed.startsWith("+")) return trimmed;
+    
+    // Clean all non-digit characters
+    const digits = trimmed.replace(/\D/g, "");
+    
+    // If it starts with 0, strip the leading 0
+    const normalized = digits.startsWith("0") ? digits.slice(1) : digits;
+    
+    return `${countryCode}${normalized}`;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,6 +142,8 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
         answerValue: answers[field.id] ?? "",
       }));
 
+      const fullPhone = getFullPhoneNumber();
+
       const res = await fetch(`/api/events/${eventData.id}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -88,7 +151,7 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
           ticketTypeId: selectedTicket,
           answers: formattedAnswers,
           guestName: guestName.trim(),
-          guestPhone: guestPhone.trim() || undefined,
+          guestPhone: fullPhone || undefined,
           guestEmail: guestEmail.trim() || undefined,
         }),
       });
@@ -155,14 +218,28 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
           <>
             <div className="form-group" style={{ margin: 0 }}>
               <label className="form-label" style={{ fontWeight: 600 }}>{t("reg.phoneNumber")} <span className="req">*</span></label>
-              <input
-                type="tel"
-                className="form-input"
-                placeholder="e.g. 012 345 678"
-                value={guestPhone}
-                onChange={(e) => setGuestPhone(e.target.value)}
-                required
-              />
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <select
+                  className="form-select"
+                  style={{ width: "125px", flexShrink: 0 }}
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                >
+                  {COUNTRY_CODES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.flag} {c.code}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="tel"
+                  className="form-input"
+                  placeholder="e.g. 12 345 678"
+                  value={guestPhone}
+                  onChange={(e) => setGuestPhone(e.target.value)}
+                  required
+                />
+              </div>
             </div>
             <div className="form-group" style={{ margin: 0 }}>
               <label className="form-label" style={{ fontWeight: 600 }}>
@@ -197,13 +274,27 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
               <label className="form-label" style={{ fontWeight: 600 }}>
                 {t("reg.phoneNumber")} <span style={{ fontWeight: 400, color: "var(--gray-400)" }}>({t("common.optional")})</span>
               </label>
-              <input
-                type="tel"
-                className="form-input"
-                placeholder="e.g. 012 345 678"
-                value={guestPhone}
-                onChange={(e) => setGuestPhone(e.target.value)}
-              />
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <select
+                  className="form-select"
+                  style={{ width: "125px", flexShrink: 0 }}
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                >
+                  {COUNTRY_CODES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.flag} {c.code}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="tel"
+                  className="form-input"
+                  placeholder="e.g. 12 345 678"
+                  value={guestPhone}
+                  onChange={(e) => setGuestPhone(e.target.value)}
+                />
+              </div>
             </div>
           </>
         )}
