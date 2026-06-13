@@ -150,7 +150,7 @@ export default function Home() {
         </div>
 
         <div className="hero-content" style={{ position: "relative", zIndex: 2, width: "100%" }}>
-          <div style={{ maxWidth: 840, marginRight: "auto", marginLeft: 0, textAlign: "left", display: "flex", flexDirection: "column", alignItems: "flex-start", padding: "0 1.5rem 0 4.5rem" }}>
+        <div className="hero-inner-content" style={{ maxWidth: 840, marginRight: "auto", marginLeft: 0, textAlign: "left", display: "flex", flexDirection: "column", alignItems: "flex-start", padding: "0 1.5rem 0 4.5rem" }}>
             <div style={{ marginBottom: "1.25rem" }}>
               <span className="badge" style={{ padding: "0.4rem 1.1rem", fontSize: "0.85rem", backdropFilter: "blur(4px)", background: "rgba(225, 29, 72, 0.08)", color: "#dc2626", border: "1px solid rgba(225, 29, 72, 0.2)", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
                 <img src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f1f0-1f1ed.png" alt="🇰🇭" style={{ width: "1.25em", height: "1.25em", objectFit: "contain" }} />
@@ -158,7 +158,7 @@ export default function Home() {
               </span>
             </div>
 
-            <h1 style={{ fontSize: "3.5rem", lineHeight: 1.15, fontWeight: 800, color: "#09090b", marginBottom: "1.25rem", letterSpacing: "-0.03em" }}>
+            <h1 className="hero-heading" style={{ fontSize: "clamp(1.75rem, 4.5vw, 3.5rem)", lineHeight: 1.15, fontWeight: 800, color: "#09090b", marginBottom: "1.25rem", letterSpacing: "-0.03em" }}>
               The smartest way to manage{" "}
               <span className="hero-highlight" style={{ background: "linear-gradient(135deg, #e11d48 0%, #be123c 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", display: "inline-flex", alignItems: "center", flexWrap: "wrap", gap: "0.3rem" }}>
                 events in Cambodia
@@ -180,7 +180,7 @@ export default function Home() {
             </div>
 
             {/* Social proof */}
-            <div style={{
+            <div className="hero-social-proof" style={{
               marginTop: "3.5rem", display: "flex", alignItems: "center", gap: "0.875rem",
               padding: "0.875rem 1.25rem",
               background: "rgba(24, 24, 27, 0.04)",
@@ -281,7 +281,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.5rem" }}>
+          <div className="how-it-works-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.5rem" }}>
             {howItWorks.map((step, i) => (
               <div key={step.number} className="how-step" style={{ flexDirection: "column", alignItems: "flex-start" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
@@ -380,7 +380,7 @@ export default function Home() {
       {/* ══ FOOTER ════════════════════════════════════════════════ */}
       <footer style={{ background: "#fff", borderTop: "1px solid var(--gray-200)", padding: "2.5rem 1.5rem" }}>
         <div className="container">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1.5rem" }}>
+          <div className="footer-inner" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1.5rem" }}>
             <div>
               <div style={{
                 fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800,
@@ -394,7 +394,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
+            <div className="footer-links" style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
               {[
                 { label: "Browse Events", href: "/events" },
                 { label: "Sign In", href: "/login" },

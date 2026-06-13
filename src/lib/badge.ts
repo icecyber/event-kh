@@ -1,6 +1,18 @@
 import { createCanvas, loadImage } from "canvas";
 import { generateQRCodeBuffer } from "./qr";
 
+/** Strip emoji characters that node-canvas can't render without an emoji font */
+function stripEmoji(str: string): string {
+  return str
+    .replace(/[\u{1F300}-\u{1FFFF}]/gu, "")
+    .replace(/[\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+/** Safe font string — Arial is present on Windows & most Linux servers with node-canvas */
+const FONT = "'Arial', 'Liberation Sans', sans-serif";
+
 export interface BadgeOptions {
   eventTitle: string;
   attendeeName: string;
@@ -84,15 +96,15 @@ async function drawVertical(
   ctx.beginPath();
   ctx.roundRect(padX - 10, logoY - 18, 160, 34, 8);
   ctx.fill();
-  ctx.font = `bold ${Math.round(W * 0.026)}px sans-serif`;
+  ctx.font = `bold ${Math.round(W * 0.026)}px ${FONT}`;
   ctx.fillStyle = "#a5f3fc";
   ctx.textAlign = "left";
-  ctx.fillText("⚡ EventKH", padX, logoY);
+  ctx.fillText("[EventKH]", padX, logoY);
 
   // Ticket type badge
   const badgeY = Math.round(H * 0.13);
   const ttFontSize = Math.round(W * 0.022);
-  ctx.font = `bold ${ttFontSize}px sans-serif`;
+  ctx.font = `bold ${ttFontSize}px ${FONT}`;
   const ttW = ctx.measureText(opts.ticketType.toUpperCase()).width + 28;
   ctx.fillStyle = "#6366f1";
   ctx.beginPath();
@@ -102,10 +114,11 @@ async function drawVertical(
   ctx.fillText(opts.ticketType.toUpperCase(), padX + 14, badgeY + ttFontSize + 2);
 
   // Attendee Name (large, center of card)
-  const nameFontSize = Math.min(Math.round(W * 0.085), opts.attendeeName.length > 18 ? Math.round(W * 0.07) : Math.round(W * 0.085));
-  ctx.font = `bold ${nameFontSize}px sans-serif`;
+  const safeName = stripEmoji(opts.attendeeName);
+  const nameFontSize = Math.min(Math.round(W * 0.085), safeName.length > 18 ? Math.round(W * 0.07) : Math.round(W * 0.085));
+  ctx.font = `bold ${nameFontSize}px ${FONT}`;
   ctx.fillStyle = "#ffffff";
-  wrapText(ctx, opts.attendeeName, padX, Math.round(H * 0.26), contentW, nameFontSize * 1.2);
+  wrapText(ctx, safeName, padX, Math.round(H * 0.26), contentW, nameFontSize * 1.2);
 
   // Divider
   const divY = Math.round(H * 0.42);
@@ -117,18 +130,21 @@ async function drawVertical(
   ctx.stroke();
 
   // Event title
+  const safeTitle = stripEmoji(opts.eventTitle);
   const titleFontSize = Math.round(W * 0.038);
-  ctx.font = `bold ${titleFontSize}px sans-serif`;
+  ctx.font = `bold ${titleFontSize}px ${FONT}`;
   ctx.fillStyle = "#e0e7ff";
-  wrapText(ctx, opts.eventTitle, padX, Math.round(H * 0.475), contentW, titleFontSize * 1.3);
+  wrapText(ctx, safeTitle, padX, Math.round(H * 0.475), contentW, titleFontSize * 1.3);
 
   // Date & Location
+  const safeDate = stripEmoji(opts.eventDate);
+  const safeLoc  = opts.eventLocation ? stripEmoji(opts.eventLocation) : null;
   const metaFontSize = Math.round(W * 0.028);
-  ctx.font = `${metaFontSize}px sans-serif`;
+  ctx.font = `${metaFontSize}px ${FONT}`;
   ctx.fillStyle = "#a5b4fc";
-  ctx.fillText(`📅  ${opts.eventDate}`, padX, Math.round(H * 0.57));
-  if (opts.eventLocation) {
-    ctx.fillText(`📍  ${opts.eventLocation}`, padX, Math.round(H * 0.57) + metaFontSize * 1.5);
+  ctx.fillText(`Date: ${safeDate}`, padX, Math.round(H * 0.57));
+  if (safeLoc) {
+    ctx.fillText(`Location: ${safeLoc}`, padX, Math.round(H * 0.57) + metaFontSize * 1.5);
   }
 
   // QR Code — bottom center
@@ -143,13 +159,13 @@ async function drawVertical(
 
   ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
-  ctx.font = `bold ${Math.round(W * 0.022)}px sans-serif`;
+  ctx.font = `bold ${Math.round(W * 0.022)}px ${FONT}`;
   ctx.fillStyle = "#4f46e5";
   ctx.textAlign = "center";
   ctx.fillText("SCAN TO VERIFY", qrX + qrSize / 2, qrY + qrSize + 24);
 
   // Watermark
-  ctx.font = `${Math.round(W * 0.018)}px sans-serif`;
+  ctx.font = `${Math.round(W * 0.018)}px ${FONT}`;
   ctx.fillStyle = "rgba(165,180,252,0.45)";
   ctx.textAlign = "center";
   ctx.fillText("Powered by EventKH • events.kh", W / 2, H - Math.round(H * 0.025));
@@ -169,14 +185,14 @@ async function drawHorizontal(
   ctx.beginPath();
   ctx.roundRect(padX - 16, 32, 180, 36, 8);
   ctx.fill();
-  ctx.font = `bold ${Math.round(W * 0.022)}px sans-serif`;
+  ctx.font = `bold ${Math.round(W * 0.022)}px ${FONT}`;
   ctx.fillStyle = "#a5f3fc";
   ctx.textAlign = "left";
-  ctx.fillText("⚡ EventKH", padX, 56);
+  ctx.fillText("[EventKH]", padX, 56);
 
   // Ticket type badge
   const ttFontSize = Math.round(W * 0.018);
-  ctx.font = `bold ${ttFontSize}px sans-serif`;
+  ctx.font = `bold ${ttFontSize}px ${FONT}`;
   const ttW = ctx.measureText(opts.ticketType.toUpperCase()).width + 24;
   ctx.fillStyle = "#6366f1";
   ctx.beginPath();
@@ -186,12 +202,13 @@ async function drawHorizontal(
   ctx.fillText(opts.ticketType.toUpperCase(), padX + 12, 88 + ttFontSize + 2);
 
   // Attendee name
-  const nameFontSize = opts.attendeeName.length > 20
+  const safeNameH = stripEmoji(opts.attendeeName);
+  const nameFontSize = safeNameH.length > 20
     ? Math.round(W * 0.048)
     : Math.round(W * 0.058);
-  ctx.font = `bold ${nameFontSize}px sans-serif`;
+  ctx.font = `bold ${nameFontSize}px ${FONT}`;
   ctx.fillStyle = "#ffffff";
-  wrapText(ctx, opts.attendeeName, padX, Math.round(H * 0.34), textW, nameFontSize * 1.2);
+  wrapText(ctx, safeNameH, padX, Math.round(H * 0.34), textW, nameFontSize * 1.2);
 
   // Divider
   const divY = Math.round(H * 0.52);
@@ -203,23 +220,26 @@ async function drawHorizontal(
   ctx.stroke();
 
   // Event title
+  const safeTitleH = stripEmoji(opts.eventTitle);
   const titleFontSize = Math.round(W * 0.026);
-  ctx.font = `bold ${titleFontSize}px sans-serif`;
+  ctx.font = `bold ${titleFontSize}px ${FONT}`;
   ctx.fillStyle = "#e0e7ff";
-  wrapText(ctx, opts.eventTitle, padX, divY + titleFontSize + 10, textW, titleFontSize * 1.3);
+  wrapText(ctx, safeTitleH, padX, divY + titleFontSize + 10, textW, titleFontSize * 1.3);
 
   // Date & Location
+  const safeDateH = stripEmoji(opts.eventDate);
+  const safeLocH  = opts.eventLocation ? stripEmoji(opts.eventLocation) : null;
   const metaFontSize = Math.round(W * 0.021);
   const metaY = divY + titleFontSize * 2 + 28;
-  ctx.font = `${metaFontSize}px sans-serif`;
+  ctx.font = `${metaFontSize}px ${FONT}`;
   ctx.fillStyle = "#a5b4fc";
-  ctx.fillText(`📅  ${opts.eventDate}`, padX, metaY);
-  if (opts.eventLocation) {
-    ctx.fillText(`📍  ${opts.eventLocation}`, padX, metaY + metaFontSize * 1.6);
+  ctx.fillText(`Date: ${safeDateH}`, padX, metaY);
+  if (safeLocH) {
+    ctx.fillText(`Location: ${safeLocH}`, padX, metaY + metaFontSize * 1.6);
   }
 
   // Watermark
-  ctx.font = `${Math.round(W * 0.015)}px sans-serif`;
+  ctx.font = `${Math.round(W * 0.015)}px ${FONT}`;
   ctx.fillStyle = "rgba(165,180,252,0.45)";
   ctx.fillText("Powered by EventKH • events.kh", padX, H - Math.round(H * 0.05));
 
@@ -235,7 +255,7 @@ async function drawHorizontal(
 
   ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
-  ctx.font = `bold ${Math.round(W * 0.014)}px sans-serif`;
+  ctx.font = `bold ${Math.round(W * 0.014)}px ${FONT}`;
   ctx.fillStyle = "#4f46e5";
   ctx.textAlign = "center";
   ctx.fillText("SCAN TO VERIFY", qrX + qrSize / 2, qrY + qrSize + 28);
