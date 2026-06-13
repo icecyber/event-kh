@@ -25,29 +25,17 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: "Invalid file type. Only JPEG, PNG, WebP, GIF, and SVG are allowed." }, { status: 400 });
     }
 
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      return Response.json({ error: "File too large. Maximum size is 10MB." }, { status: 400 });
-    }
-
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    
+    // Validate file size (max 2MB to prevent large database payload overhead)
+    if (file.size > 2 * 1024 * 1024) {
+      return Response.json({ error: "File too large. Maximum background size is 2MB." }, { status: 400 });
+    }
 
-    // Create unique filename
-    const ext = file.name.split(".").pop() ?? "png";
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 8);
-    const filename = `upload-${timestamp}-${random}.${ext}`;
+    const base64 = buffer.toString("base64");
+    const url = `data:${file.type};base64,${base64}`;
 
-    // Ensure uploads directory exists
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadsDir, { recursive: true });
-
-    // Write the file
-    const filePath = path.join(uploadsDir, filename);
-    await writeFile(filePath, buffer);
-
-    const url = `/uploads/${filename}`;
     return Response.json({ url }, { status: 201 });
   } catch (err) {
     console.error("Upload error:", err);
