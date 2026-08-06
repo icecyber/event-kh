@@ -44,7 +44,27 @@ const client = createClient({ url, authToken });
 const queries = [
   'ALTER TABLE "Event" ADD COLUMN "badgeQrPositionX" INTEGER NOT NULL DEFAULT 50',
   'ALTER TABLE "Event" ADD COLUMN "badgeQrPositionY" INTEGER NOT NULL DEFAULT 70',
-  'ALTER TABLE "Event" ADD COLUMN "badgeQrSize" INTEGER NOT NULL DEFAULT 25'
+  'ALTER TABLE "Event" ADD COLUMN "badgeQrSize" INTEGER NOT NULL DEFAULT 25',
+
+  // --- Pluggable question types: optional CustomField extensions ---
+  'ALTER TABLE "CustomField" ADD COLUMN "placeholder" TEXT',
+  'ALTER TABLE "CustomField" ADD COLUMN "helpText" TEXT',
+  'ALTER TABLE "CustomField" ADD COLUMN "minLength" INTEGER',
+  'ALTER TABLE "CustomField" ADD COLUMN "maxLength" INTEGER',
+  'ALTER TABLE "CustomField" ADD COLUMN "regex" TEXT',
+  'ALTER TABLE "CustomField" ADD COLUMN "minValue" REAL',
+  'ALTER TABLE "CustomField" ADD COLUMN "maxValue" REAL',
+  'ALTER TABLE "CustomField" ADD COLUMN "step" REAL',
+  'ALTER TABLE "CustomField" ADD COLUMN "scale" INTEGER',
+  'ALTER TABLE "CustomField" ADD COLUMN "rateType" TEXT',
+  'ALTER TABLE "CustomField" ADD COLUMN "rows" TEXT',
+  'ALTER TABLE "CustomField" ADD COLUMN "columns" TEXT',
+  'ALTER TABLE "CustomField" ADD COLUMN "rateValues" TEXT',
+  'ALTER TABLE "CustomField" ADD COLUMN "maxFiles" INTEGER',
+  'ALTER TABLE "CustomField" ADD COLUMN "maxFileSize" INTEGER',
+  'ALTER TABLE "CustomField" ADD COLUMN "acceptedTypes" TEXT',
+  'ALTER TABLE "CustomField" ADD COLUMN "expression" TEXT',
+  'ALTER TABLE "CustomField" ADD COLUMN "readOnly" BOOLEAN NOT NULL DEFAULT 0',
 ];
 
 for (const q of queries) {

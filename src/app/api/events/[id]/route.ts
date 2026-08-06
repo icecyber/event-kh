@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { NextRequest } from "next/server";
+import { toCustomFieldData, type IncomingField } from "@/lib/questions/persistence";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -93,16 +94,8 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
         }
 
         // 3. Update or create fields
-        for (const field of incomingFields) {
-          const fieldData = {
-            label: field.label,
-            fieldType: field.fieldType,
-            required: Boolean(field.required),
-            options: field.fieldType === "select" && field.options
-              ? JSON.stringify(field.options)
-              : null,
-            order: Number(field.order) || 0,
-          };
+        for (const [idx, field] of incomingFields.entries()) {
+          const fieldData = toCustomFieldData(field as IncomingField, idx);
 
           if (field.id) {
             await tx.customField.update({

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { NextRequest } from "next/server";
+import { formatAnswerForExport } from "@/lib/questions";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -63,8 +64,12 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
 
   const rows = registrations.map((reg, idx) => {
     const customValues = customFields.map((field) => {
-      const answer = reg.customAnswers.find((a) => a.fieldName === field.label);
-      return answer?.answerValue ?? "";
+      // Match on ID rather than label: labels are editable and non-unique.
+      const answer =
+        reg.customAnswers.find((a) => a.customFieldId === field.id) ??
+        reg.customAnswers.find((a) => a.fieldName === field.label);
+      if (!answer) return "";
+      return formatAnswerForExport(answer.answerValue, field.fieldType);
     });
 
     const name = reg.attendee?.name || reg.guestName || "";
