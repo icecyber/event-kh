@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 interface Participant {
   id: string;
@@ -33,6 +33,24 @@ export default function ParticipantsTab({
   const [undoingId, setUndoingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [printingId, setPrintingId] = useState<string | null>(null);
+  const [toolbarMenuOpen, setToolbarMenuOpen] = useState(false);
+  const [rowMenuOpenId, setRowMenuOpenId] = useState<string | null>(null);
+  const toolbarMenuRef = useRef<HTMLDivElement>(null);
+  const rowMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (toolbarMenuRef.current && !toolbarMenuRef.current.contains(e.target as Node)) {
+        setToolbarMenuOpen(false);
+      }
+      if (rowMenuRef.current && !rowMenuRef.current.contains(e.target as Node)) {
+        setRowMenuOpenId(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   // Debounce search
   useEffect(() => {
@@ -166,7 +184,7 @@ export default function ParticipantsTab({
     <div>
       {/* Toolbar */}
       <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1.25rem", flexWrap: "wrap", alignItems: "center" }} className="no-print">
-        <div className="search-bar" style={{ flex: 1, minWidth: 220 }}>
+        <div className="search-bar" style={{ flex: 1, minWidth: 180 }}>
           <span style={{ color: "var(--gray-400)" }}>🔍</span>
           <input
             id="participant-search"
@@ -175,17 +193,42 @@ export default function ParticipantsTab({
             placeholder="Search by name or email…"
           />
         </div>
-        <button id="export-csv-btn" className="btn btn-secondary" onClick={handleExportCSV}>⬇️ Export CSV</button>
-        <button id="print-participants-btn" className="btn btn-secondary" onClick={handlePrintList}>🖨️ Print List</button>
-        <a
-          href={`/dashboard/events/${eventSlug}/print-badges`}
-          target="_blank"
-          id="print-badges-btn"
-          className="btn btn-secondary"
-          style={{ textDecoration: "none" }}
-        >
-          🎫 Print All Badges
-        </a>
+        <div ref={toolbarMenuRef} style={{ position: "relative" }}>
+          <button
+            id="toolbar-more-btn"
+            className="btn btn-secondary"
+            onClick={() => setToolbarMenuOpen((v) => !v)}
+          >
+            ⋮ More
+          </button>
+          {toolbarMenuOpen && (
+            <div className="dropdown-menu" style={{ right: 0 }}>
+              <button
+                id="export-csv-btn"
+                className="dropdown-item"
+                onClick={() => { setToolbarMenuOpen(false); handleExportCSV(); }}
+              >
+                ⬇️ Export CSV
+              </button>
+              <button
+                id="print-participants-btn"
+                className="dropdown-item"
+                onClick={() => { setToolbarMenuOpen(false); handlePrintList(); }}
+              >
+                🖨️ Print List
+              </button>
+              <a
+                href={`/dashboard/events/${eventSlug}/print-badges`}
+                target="_blank"
+                id="print-badges-btn"
+                className="dropdown-item"
+                onClick={() => setToolbarMenuOpen(false)}
+              >
+                🎫 Print All Badges
+              </a>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Stats bar */}
@@ -252,7 +295,7 @@ export default function ParticipantsTab({
                       )}
                     </td>
                     <td data-label="Actions" className="no-print">
-                      <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                      <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
                         {!p.checkedInAt ? (
                           <button
                             className="btn btn-success btn-sm"
@@ -273,29 +316,39 @@ export default function ParticipantsTab({
                             {undoingId === p.id ? <span className="spinner spinner-dark" /> : "↩️ Undo"}
                           </button>
                         )}
-                        <button
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => handlePrintBadge(p)}
-                          disabled={printingId === p.id}
-                          title="Print badge"
-                        >
-                          {printingId === p.id ? <span className="spinner spinner-dark" /> : "🖨️"}
-                        </button>
-                        <button
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => handleDownloadBadge(p)}
-                          title="Download badge"
-                        >
-                          🎫
-                        </button>
-                        <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => handleDelete(p)}
-                          disabled={deletingId === p.id}
-                          title="Delete registration"
-                        >
-                          {deletingId === p.id ? <span className="spinner" /> : "🗑️"}
-                        </button>
+                        <div ref={rowMenuOpenId === p.id ? rowMenuRef : undefined} style={{ position: "relative" }}>
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => setRowMenuOpenId(rowMenuOpenId === p.id ? null : p.id)}
+                            title="More actions"
+                          >
+                            ⋮
+                          </button>
+                          {rowMenuOpenId === p.id && (
+                            <div className="dropdown-menu" style={{ right: 0 }}>
+                              <button
+                                className="dropdown-item"
+                                onClick={() => { setRowMenuOpenId(null); handlePrintBadge(p); }}
+                                disabled={printingId === p.id}
+                              >
+                                {printingId === p.id ? <span className="spinner spinner-dark" /> : "🖨️ Print Badge"}
+                              </button>
+                              <button
+                                className="dropdown-item"
+                                onClick={() => { setRowMenuOpenId(null); handleDownloadBadge(p); }}
+                              >
+                                🎫 Download Badge
+                              </button>
+                              <button
+                                className="dropdown-item dropdown-item-danger"
+                                onClick={() => { setRowMenuOpenId(null); handleDelete(p); }}
+                                disabled={deletingId === p.id}
+                              >
+                                {deletingId === p.id ? <span className="spinner" /> : "🗑️ Delete"}
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>
