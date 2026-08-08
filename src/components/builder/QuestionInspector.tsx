@@ -104,6 +104,7 @@ export default function QuestionInspector({
                     next?.defaultProps?.maxFileSize?.toString() ?? draft.maxFileSize,
                   acceptedTypes:
                     next?.defaultProps?.acceptedTypes ?? draft.acceptedTypes,
+                  rows: next?.defaultProps?.rows ?? draft.rows,
                   options:
                     next?.supports.options && !draft.options
                       ? "Option 1, Option 2"
@@ -165,6 +166,50 @@ export default function QuestionInspector({
             >
               ➕ Add choice
             </button>
+          </div>
+        )}
+
+        {/* Sub-items for multipletext */}
+        {draft.fieldType === "multipletext" && (
+          <div className="qb-insp-section">
+            <div className="qb-insp-section-label">Sub-items</div>
+            <RowsEditor
+              rows={parseRows(draft.rows)}
+              placeholder="Item"
+              onChange={(next) => onChange({ rows: JSON.stringify(next) })}
+            />
+          </div>
+        )}
+
+        {/* Image URLs for imagepicker, paired positionally with choices */}
+        {draft.fieldType === "imagepicker" && (
+          <div className="qb-insp-section">
+            <div className="qb-insp-section-label">Image URLs</div>
+            <p className="qb-insp-hint" style={{ marginBottom: "0.5rem" }}>
+              One URL per choice above, in the same order.
+            </p>
+            {options.map((label, i) => {
+              const imgs = parseRows(draft.rows);
+              return (
+                <div className="qb-insp-row" key={i}>
+                  <label className="qb-insp-label">{label || `Choice ${i + 1}`}</label>
+                  <input
+                    className="form-input"
+                    value={imgs[i] ?? ""}
+                    placeholder="https://…"
+                    onChange={(e) => {
+                      const next = [...imgs];
+                      while (next.length < options.length) next.push("");
+                      next[i] = e.target.value;
+                      onChange({ rows: JSON.stringify(next.slice(0, options.length)) });
+                    }}
+                  />
+                </div>
+              );
+            })}
+            {options.length === 0 && (
+              <p className="qb-insp-hint">Add choices first.</p>
+            )}
           </div>
         )}
 
@@ -245,6 +290,175 @@ export default function QuestionInspector({
                 placeholder="image/*"
               />
               <p className="qb-insp-hint">Server limit is 2MB per file.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Matrix-specific */}
+        {["matrix", "matrixdropdown"].includes(draft.fieldType) && (
+          <div className="qb-insp-section">
+            <div className="qb-insp-section-label">Rows</div>
+            <RowsEditor
+              rows={parseRows(draft.rows).map((r) => {
+                try {
+                  const p = JSON.parse(r);
+                  return p.text || r;
+                } catch {
+                  return r;
+                }
+              })}
+              placeholder="Row"
+              onChange={(next) => {
+                const rowsJson = JSON.stringify(
+                  next.map((r) => {
+                    try {
+                      const p = JSON.parse(r);
+                      return JSON.stringify(p);
+                    } catch {
+                      return JSON.stringify({ value: r.toLowerCase().replace(/\s+/g, "_"), text: r });
+                    }
+                  })
+                );
+                onChange({ rows: rowsJson });
+              }}
+            />
+            {parseRows(draft.rows).length === 0 && (
+              <p className="qb-insp-hint" style={{ color: "var(--rose-500)" }}>
+                Add at least one row.
+              </p>
+            )}
+          </div>
+        )}
+
+        {["matrix", "matrixdropdown", "matrixdynamic"].includes(draft.fieldType) && (
+          <div className="qb-insp-section">
+            <div className="qb-insp-section-label">Columns</div>
+            <RowsEditor
+              rows={parseRows(draft.columns).map((c) => {
+                try {
+                  const p = JSON.parse(c);
+                  return p.text || c;
+                } catch {
+                  return c;
+                }
+              })}
+              placeholder="Column"
+              onChange={(next) => {
+                const colsJson = JSON.stringify(
+                  next.map((c) => {
+                    try {
+                      const p = JSON.parse(c);
+                      return JSON.stringify(p);
+                    } catch {
+                      return JSON.stringify({ value: c.toLowerCase().replace(/\s+/g, "_"), text: c, choices: [] });
+                    }
+                  })
+                );
+                onChange({ columns: colsJson });
+              }}
+            />
+            {parseRows(draft.columns).length === 0 && (
+              <p className="qb-insp-hint" style={{ color: "var(--rose-500)" }}>
+                Add at least one column.
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Matrix Dropdown - choices per column */}
+        {draft.fieldType === "matrixdropdown" && (
+          <div className="qb-insp-section">
+            <div className="qb-insp-section-label">Column Choices</div>
+            <p className="qb-insp-hint" style={{ marginBottom: "0.5rem" }}>
+              Configure dropdown choices for each column.
+            </p>
+            {parseRows(draft.columns).map((col, i) => {
+              try {
+                const colData = JSON.parse(col);
+                return (
+                  <div key={i} className="qb-insp-row" style={{ marginBottom: "0.75rem" }}>
+                    <label className="qb-insp-label">{colData.text || `Column ${i + 1}`}</label>
+                    <RowsEditor
+                      rows={colData.choices ?? []}
+                      placeholder="Choice"
+                      onChange={(next) => {
+                        const cols = parseRows(draft.columns);
+                        const colData = JSON.parse(cols[i]);
+                        colData.choices = next;
+                        cols[i] = JSON.stringify(colData);
+                        onChange({ columns: JSON.stringify(cols) });
+                      }}
+                    />
+                  </div>
+                );
+              } catch {
+                return null;
+              }
+            })}
+          </div>
+        )}
+
+        {/* Panel / Panel Dynamic - template fields */}
+        {["panel", "paneldynamic"].includes(draft.fieldType) && (
+          <div className="qb-insp-section">
+            <div className="qb-insp-section-label">Template Fields</div>
+            <p className="qb-insp-hint" style={{ marginBottom: "0.5rem" }}>
+              Each field defines a column in the panel.
+            </p>
+            <RowsEditor
+              rows={parseRows(draft.rows).map((f) => {
+                try {
+                  const p = JSON.parse(f);
+                  return p.text || p.label || f;
+                } catch {
+                  return f;
+                }
+              })}
+              placeholder="Field"
+              onChange={(next) => {
+                const rowsJson = JSON.stringify(
+                  next.map((f) => {
+                    try {
+                      const p = JSON.parse(f);
+                      return JSON.stringify(p);
+                    } catch {
+                      return JSON.stringify({ value: f.toLowerCase().replace(/\s+/g, "_"), text: f, placeholder: "" });
+                    }
+                  })
+                );
+                onChange({ rows: rowsJson });
+              }}
+            />
+            {parseRows(draft.rows).length === 0 && (
+              <p className="qb-insp-hint" style={{ color: "var(--rose-500)" }}>
+                Add at least one field.
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Expression-specific */}
+        {draft.fieldType === "expression" && (
+          <div className="qb-insp-section">
+            <div className="qb-insp-section-label">Expression Formula</div>
+          <p className="qb-insp-hint" style={{ marginBottom: "0.5rem" }}>
+            Use field labels as variables. Example:{" "}
+            <code>{"{" + "age" + "}"} &gt;= 18 ? {"\""}Adult{"\""} : {"\""}Minor{"\""}</code>
+          </p>
+            <div className="qb-insp-row">
+              <label className="qb-insp-label">Formula</label>
+              <input
+                className="form-input"
+                value={draft.expression ?? ""}
+                onChange={(e) => onChange({ expression: e.target.value })}
+                placeholder="e.g. {age} >= 18 ? 'Adult' : 'Minor'"
+              />
+            </div>
+            <div className="qb-insp-row">
+              <label className="qb-insp-label">Available Variables</label>
+              <div style={{ fontSize: "0.76rem", color: "var(--gray-400)" }}>
+                Available fields will appear here when previewing.
+              </div>
             </div>
           </div>
         )}
@@ -343,6 +557,68 @@ export default function QuestionInspector({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Parse a JSON-encoded string array column, tolerating malformed values. */
+function parseRows(raw?: string): string[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.map(String) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Simple add/edit/remove list bound to a JSON string column. */
+function RowsEditor({
+  rows,
+  placeholder,
+  onChange,
+}: {
+  rows: string[];
+  placeholder: string;
+  onChange: (next: string[]) => void;
+}) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+      {rows.map((row, i) => (
+        <div className="qb-opt-row" key={i}>
+          <input
+            className="form-input"
+            value={row}
+            placeholder={`${placeholder} ${i + 1}`}
+            onChange={(e) => {
+              const next = [...rows];
+              next[i] = e.target.value;
+              onChange(next);
+            }}
+          />
+          <button
+            type="button"
+            className="qb-icon-btn danger"
+            title="Remove"
+            onClick={() => onChange(rows.filter((_, idx) => idx !== i))}
+          >
+            ✕
+          </button>
+        </div>
+      ))}
+      {rows.length === 0 && (
+        <p className="qb-insp-hint" style={{ color: "var(--rose-500)" }}>
+          Add at least one item.
+        </p>
+      )}
+      <button
+        type="button"
+        className="btn btn-ghost btn-sm"
+        style={{ marginTop: "0.2rem", fontSize: "0.78rem" }}
+        onClick={() => onChange([...rows, `${placeholder} ${rows.length + 1}`])}
+      >
+        ➕ Add {placeholder.toLowerCase()}
+      </button>
     </div>
   );
 }

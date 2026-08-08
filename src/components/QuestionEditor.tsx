@@ -38,6 +38,9 @@ export interface QuestionDraft {
   maxFiles?: string;
   maxFileSize?: string;
   acceptedTypes?: string;
+  rows?: string;
+  columns?: string;
+  expression?: string;
 }
 
 let draftSeq = 0;
@@ -57,6 +60,7 @@ export function createEmptyDraft(fieldType = "text"): QuestionDraft {
     maxFiles: dp?.maxFiles != null ? String(dp.maxFiles) : undefined,
     maxFileSize: dp?.maxFileSize != null ? String(dp.maxFileSize) : undefined,
     acceptedTypes: dp?.acceptedTypes ?? undefined,
+    rows: dp?.rows ?? undefined,
   };
 }
 
@@ -459,5 +463,8 @@ export function draftToPayload(draft: QuestionDraft, order: number) {
     maxFiles: num(draft.maxFiles),
     maxFileSize: num(draft.maxFileSize),
     acceptedTypes: draft.acceptedTypes || undefined,
+    rows: draft.rows || undefined,
+    columns: draft.columns || undefined,
+    expression: draft.expression || undefined,
   };
 }

@@ -36,5 +36,6 @@ export function draftToPreviewField(draft: QuestionDraft, idx: number): Question
     maxFiles: num(draft.maxFiles),
     maxFileSize: num(draft.maxFileSize),
     acceptedTypes: draft.acceptedTypes ?? null,
+    rows: draft.rows ?? null,
   };
 }

@@ -150,6 +150,23 @@ export default function QuestionsTab({ event }: { event: QuestionsTabEvent }) {
       return;
     }
 
+    // multipletext stores its sub-item labels in `rows`; without them the
+    // question renders as an empty block on the public form.
+    const missingRows = fields.findIndex((f) => {
+      if (f.fieldType !== "multipletext") return false;
+      try {
+        const parsed = JSON.parse(f.rows ?? "[]");
+        return !Array.isArray(parsed) || parsed.filter(Boolean).length === 0;
+      } catch {
+        return true;
+      }
+    });
+    if (missingRows !== -1) {
+      setError(`Question #${missingRows + 1} needs at least one sub-item.`);
+      setSelected(missingRows);
+      return;
+    }
+
     setSaving(true);
     setError("");
     setSuccess(false);

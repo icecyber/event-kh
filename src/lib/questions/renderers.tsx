@@ -9,7 +9,7 @@
  */
 
 import { useRef, useState } from "react";
-import { getQuestionType, parseOptions, type QuestionField } from "./index";
+import { getQuestionType, parseOptions, parseJsonArray, type QuestionField } from "./index";
 
 export interface FieldRenderProps {
   field: QuestionField;
@@ -387,17 +387,739 @@ function FileInput({ field, value, onChange, disabled, eventId }: FieldRenderPro
   );
 }
 
+// --- Phase 2 renderers ----------------------------------------------------
+
+function TimeInput({ field, value, onChange, disabled }: FieldRenderProps) {
+  return (
+    <input
+      type="time"
+      className="form-input"
+      value={(value as string) ?? ""}
+      required={field.required}
+      disabled={disabled}
+      onChange={(e) => onChange(e.target.value)}
+    />
+  );
+}
+
+function DateTimeInput({ field, value, onChange, disabled }: FieldRenderProps) {
+  return (
+    <input
+      type="datetime-local"
+      className="form-input"
+      value={(value as string) ?? ""}
+      required={field.required}
+      disabled={disabled}
+      onChange={(e) => onChange(e.target.value)}
+    />
+  );
+}
+
+function RankingInput({ field, value, onChange, disabled }: FieldRenderProps) {
+  const opts = parseOptions(field.options);
+  // Start from any saved order, then append choices not yet ranked.
+  const current: string[] = Array.isArray(value) ? (value as string[]) : [];
+  const ordered = [
+    ...current.filter((v) => opts.includes(v)),
+    ...opts.filter((o) => !current.includes(o)),
+  ];
+
+  const move = (from: number, to: number) => {
+    if (disabled || to < 0 || to >= ordered.length) return;
+    const next = [...ordered];
+    const [m] = next.splice(from, 1);
+    next.splice(to, 0, m);
+    onChange(next);
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+      {ordered.map((opt, i) => (
+        <div
+          key={opt}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.6rem",
+            padding: "0.5rem 0.7rem",
+            border: "1.5px solid var(--gray-200)",
+            borderRadius: "0.5rem",
+            background: "#fff",
+          }}
+        >
+          <span
+            style={{
+              width: 22,
+              height: 22,
+              flexShrink: 0,
+              borderRadius: "50%",
+              background: "var(--brand-600)",
+              color: "#fff",
+              fontSize: "0.72rem",
+              fontWeight: 700,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {i + 1}
+          </span>
+          <span style={{ flex: 1, color: "var(--gray-700)", fontSize: "0.9rem" }}>
+            {opt}
+          </span>
+          <button
+            type="button"
+            disabled={disabled || i === 0}
+            onClick={() => move(i, i - 1)}
+            aria-label={`Move ${opt} up`}
+            style={{
+              border: "none",
+              background: "none",
+              cursor: disabled || i === 0 ? "not-allowed" : "pointer",
+              opacity: i === 0 ? 0.3 : 1,
+              color: "var(--gray-500)",
+              padding: "0.1rem 0.3rem",
+            }}
+          >
+            ↑
+          </button>
+          <button
+            type="button"
+            disabled={disabled || i === ordered.length - 1}
+            onClick={() => move(i, i + 1)}
+            aria-label={`Move ${opt} down`}
+            style={{
+              border: "none",
+              background: "none",
+              cursor:
+                disabled || i === ordered.length - 1 ? "not-allowed" : "pointer",
+              opacity: i === ordered.length - 1 ? 0.3 : 1,
+              color: "var(--gray-500)",
+              padding: "0.1rem 0.3rem",
+            }}
+          >
+            ↓
+          </button>
+        </div>
+      ))}
+      {ordered.length === 0 && (
+        <p style={{ fontSize: "0.82rem", color: "var(--gray-400)", margin: 0 }}>
+          No items to rank.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function ImagePickerInput({ field, value, onChange, disabled }: FieldRenderProps) {
+  const labels = parseOptions(field.options);
+  const images = parseJsonArray<string>(field.rows);
+
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))",
+        gap: "0.6rem",
+      }}
+    >
+      {labels.map((label, i) => {
+        const src = images[i];
+        const active = value === label;
+        return (
+          <button
+            key={label}
+            type="button"
+            disabled={disabled}
+            onClick={() => onChange(active ? "" : label)}
+            style={{
+              padding: 0,
+              overflow: "hidden",
+              cursor: disabled ? "not-allowed" : "pointer",
+              border: `2px solid ${active ? "var(--brand-600)" : "var(--gray-200)"}`,
+              borderRadius: "0.6rem",
+              background: "#fff",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <span
+              style={{
+                height: 74,
+                background: "var(--gray-100)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+              }}
+            >
+              {src ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={src}
+                  alt={label}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : (
+                <span style={{ fontSize: "1.4rem", opacity: 0.4 }}>🖼️</span>
+              )}
+            </span>
+            <span
+              style={{
+                padding: "0.35rem 0.4rem",
+                fontSize: "0.78rem",
+                fontWeight: 600,
+                color: active ? "var(--brand-700)" : "var(--gray-600)",
+                textAlign: "center",
+              }}
+            >
+              {active ? "✓ " : ""}
+              {label}
+            </span>
+          </button>
+        );
+      })}
+      {labels.length === 0 && (
+        <p style={{ fontSize: "0.82rem", color: "var(--gray-400)", margin: 0 }}>
+          No images configured.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function MultipleTextInput({ field, value, onChange, disabled }: FieldRenderProps) {
+  const items = parseJsonArray<string>(field.rows);
+  const answers = (value ?? {}) as Record<string, string>;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+      {items.map((label) => (
+        <div
+          key={label}
+          style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}
+        >
+          <span
+            style={{
+              minWidth: 110,
+              fontSize: "0.83rem",
+              color: "var(--gray-600)",
+              fontWeight: 500,
+            }}
+          >
+            {label}
+          </span>
+          <input
+            className="form-input"
+            style={{ flex: 1 }}
+            value={answers[label] ?? ""}
+            placeholder={field.placeholder ?? ""}
+            disabled={disabled}
+            onChange={(e) => onChange({ ...answers, [label]: e.target.value })}
+          />
+        </div>
+      ))}
+      {items.length === 0 && (
+        <p style={{ fontSize: "0.82rem", color: "var(--gray-400)", margin: 0 }}>
+          No sub-items configured.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function SignaturePadInput({ value, onChange, disabled }: FieldRenderProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const drawing = useRef(false);
+
+  const pos = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const c = canvasRef.current!;
+    const r = c.getBoundingClientRect();
+    // Map CSS pixels to the canvas backing-store resolution.
+    return {
+      x: ((e.clientX - r.left) / r.width) * c.width,
+      y: ((e.clientY - r.top) / r.height) * c.height,
+    };
+  };
+
+  const start = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (disabled) return;
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx) return;
+    drawing.current = true;
+    const { x, y } = pos(e);
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#0f172a";
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const draw = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!drawing.current || disabled) return;
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx) return;
+    const { x, y } = pos(e);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
+  const end = () => {
+    if (!drawing.current) return;
+    drawing.current = false;
+    const c = canvasRef.current;
+    if (c) onChange(c.toDataURL("image/png"));
+  };
+
+  const clear = () => {
+    const c = canvasRef.current;
+    const ctx = c?.getContext("2d");
+    if (c && ctx) ctx.clearRect(0, 0, c.width, c.height);
+    onChange("");
+  };
+
+  const signed = typeof value === "string" && value.startsWith("data:image/");
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+      <canvas
+        ref={canvasRef}
+        width={520}
+        height={160}
+        onPointerDown={start}
+        onPointerMove={draw}
+        onPointerUp={end}
+        onPointerLeave={end}
+        style={{
+          width: "100%",
+          height: 160,
+          border: "1.5px dashed var(--gray-300)",
+          borderRadius: "0.5rem",
+          background: "#fff",
+          touchAction: "none",
+          cursor: disabled ? "not-allowed" : "crosshair",
+        }}
+      />
+      <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          onClick={clear}
+          disabled={disabled}
+          style={{ fontSize: "0.78rem" }}
+        >
+          Clear
+        </button>
+        <span style={{ fontSize: "0.76rem", color: "var(--gray-400)" }}>
+          {signed ? "✓ Signature captured" : "Sign above using your mouse or finger."}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// --- Phase 3 renderers ----------------------------------------------------
+
+function MatrixInput({ field, value, onChange, disabled }: FieldRenderProps) {
+  const rows = parseJsonArray<{ value: string; text: string }>(field.rows);
+  const cols = parseJsonArray<{ value: string; text: string }>(field.columns);
+  const answers = (value ?? {}) as Record<string, Record<string, string>>;
+
+  const handleChange = (rowKey: string, colKey: string, val: string) => {
+    if (disabled) return;
+    const next = { ...answers };
+    if (!next[rowKey]) next[rowKey] = {};
+    next[rowKey][colKey] = val;
+    onChange(next);
+  };
+
+  if (!rows.length || !cols.length) {
+    return (
+      <p style={{ fontSize: "0.82rem", color: "var(--gray-400)", margin: 0 }}>
+        Configure rows and columns in the inspector.
+      </p>
+    );
+  }
+
+  return (
+    <div style={{ overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+        <thead>
+          <tr>
+            <th style={{ padding: "0.4rem 0.6rem", textAlign: "left", borderBottom: "1px solid var(--gray-200)", fontWeight: 600, color: "var(--gray-600)", minWidth: 120 }}></th>
+            {cols.map((c) => (
+              <th key={c.value} style={{ padding: "0.4rem 0.6rem", textAlign: "left", borderBottom: "1px solid var(--gray-200)", fontWeight: 600, color: "var(--gray-600)", minWidth: 120 }}>
+                {c.text}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.value}>
+              <td style={{ padding: "0.4rem 0.6rem", borderBottom: "1px solid var(--gray-100)", fontWeight: 500, color: "var(--gray-700)", whiteSpace: "nowrap" }}>
+                {r.text}
+              </td>
+              {cols.map((c) => (
+                <td key={c.value} style={{ padding: "0.2rem 0.6rem", borderBottom: "1px solid var(--gray-100)" }}>
+                  <input
+                    className="form-input"
+                    style={{ width: "100%", minWidth: 100, padding: "0.3rem 0.5rem", fontSize: "0.82rem" }}
+                    value={answers[r.value]?.[c.value] ?? ""}
+                    onChange={(e) => handleChange(r.value, c.value, e.target.value)}
+                    disabled={disabled}
+                    placeholder={c.text}
+                  />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function MatrixDropdownInput({ field, value, onChange, disabled }: FieldRenderProps) {
+  const rows = parseJsonArray<{ value: string; text: string }>(field.rows);
+  const cols = parseJsonArray<{ value: string; text: string; choices?: string[] }>(field.columns);
+  const answers = (value ?? {}) as Record<string, Record<string, string>>;
+
+  const handleChange = (rowKey: string, colKey: string, val: string) => {
+    if (disabled) return;
+    const next = { ...answers };
+    if (!next[rowKey]) next[rowKey] = {};
+    next[rowKey][colKey] = val;
+    onChange(next);
+  };
+
+  if (!rows.length || !cols.length) {
+    return (
+      <p style={{ fontSize: "0.82rem", color: "var(--gray-400)", margin: 0 }}>
+        Configure rows and columns in the inspector.
+      </p>
+    );
+  }
+
+  return (
+    <div style={{ overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+        <thead>
+          <tr>
+            <th style={{ padding: "0.4rem 0.6rem", textAlign: "left", borderBottom: "1px solid var(--gray-200)", fontWeight: 600, color: "var(--gray-600)", minWidth: 120 }}></th>
+            {cols.map((c) => (
+              <th key={c.value} style={{ padding: "0.4rem 0.6rem", textAlign: "left", borderBottom: "1px solid var(--gray-200)", fontWeight: 600, color: "var(--gray-600)", minWidth: 140 }}>
+                {c.text}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.value}>
+              <td style={{ padding: "0.4rem 0.6rem", borderBottom: "1px solid var(--gray-100)", fontWeight: 500, color: "var(--gray-700)", whiteSpace: "nowrap" }}>
+                {r.text}
+              </td>
+              {cols.map((c) => {
+                const choices = c.choices ?? [];
+                return (
+                  <td key={c.value} style={{ padding: "0.2rem 0.6rem", borderBottom: "1px solid var(--gray-100)" }}>
+                    <select
+                      className="form-select"
+                      style={{ width: "100%", minWidth: 120, padding: "0.3rem 0.5rem", fontSize: "0.82rem" }}
+                      value={answers[r.value]?.[c.value] ?? ""}
+                      onChange={(e) => handleChange(r.value, c.value, e.target.value)}
+                      disabled={disabled}
+                    >
+                      <option value="">Select…</option>
+                      {choices.map((opt, i) => (
+                        <option key={i} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function MatrixDynamicInput({ field, value, onChange, disabled }: FieldRenderProps) {
+  const cols = parseJsonArray<{ value: string; text: string; choices?: string[] }>(field.columns);
+  const answers: Record<string, string>[] = Array.isArray(value) ? value : [];
+
+  const handleCellChange = (rowIdx: number, colKey: string, val: string) => {
+    if (disabled) return;
+    const next = [...answers];
+    if (!next[rowIdx]) next[rowIdx] = {};
+    next[rowIdx][colKey] = val;
+    onChange(next);
+  };
+
+  const addRow = () => {
+    if (disabled) return;
+    onChange([...answers, {}]);
+  };
+
+  const removeRow = (idx: number) => {
+    if (disabled) return;
+    onChange(answers.filter((_, i) => i !== idx));
+  };
+
+  if (!cols.length) {
+    return (
+      <p style={{ fontSize: "0.82rem", color: "var(--gray-400)", margin: 0 }}>
+        Configure columns in the inspector.
+      </p>
+    );
+  }
+
+  return (
+    <div style={{ overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+        <thead>
+          <tr>
+            <th style={{ padding: "0.4rem 0.6rem", textAlign: "left", borderBottom: "1px solid var(--gray-200)", fontWeight: 600, color: "var(--gray-600)", width: 36 }}></th>
+            {cols.map((c) => (
+              <th key={c.value} style={{ padding: "0.4rem 0.6rem", textAlign: "left", borderBottom: "1px solid var(--gray-200)", fontWeight: 600, color: "var(--gray-600)", minWidth: 140 }}>
+                {c.text}
+              </th>
+            ))}
+            <th style={{ padding: "0.4rem 0.6rem", textAlign: "left", borderBottom: "1px solid var(--gray-200)", fontWeight: 600, color: "var(--gray-600)", width: 48 }}></th>
+          </tr>
+        </thead>
+        <tbody>
+          {answers.length === 0 ? (
+            <tr>
+              <td colSpan={cols.length + 2} style={{ padding: "1.5rem", textAlign: "center", color: "var(--gray-400)" }}>
+                No rows yet. Click &quot;Add row&quot; to start.
+              </td>
+            </tr>
+          ) : (
+            answers.map((row, i) => (
+              <tr key={i}>
+                <td style={{ padding: "0.4rem 0.6rem", borderBottom: "1px solid var(--gray-100)", fontWeight: 600, color: "var(--gray-600)", textAlign: "center" }}>
+                  {i + 1}
+                </td>
+                {cols.map((c) => {
+                  const choices = c.choices ?? [];
+                  return (
+                    <td key={c.value} style={{ padding: "0.2rem 0.6rem", borderBottom: "1px solid var(--gray-100)" }}>
+                      <select
+                        className="form-select"
+                        style={{ width: "100%", minWidth: 120, padding: "0.3rem 0.5rem", fontSize: "0.82rem" }}
+                        value={row[c.value] ?? ""}
+                        onChange={(e) => handleCellChange(i, c.value, e.target.value)}
+                        disabled={disabled}
+                      >
+                        <option value="">Select…</option>
+                        {choices.map((opt, j) => (
+                          <option key={j} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    </td>
+                  );
+                })}
+                <td style={{ padding: "0.2rem 0.6rem", borderBottom: "1px solid var(--gray-100)", textAlign: "center" }}>
+                  <button
+                    type="button"
+                    className="qb-icon-btn danger"
+                    title="Remove row"
+                    aria-label={`Remove row ${i + 1}`}
+                    disabled={disabled}
+                    onClick={() => removeRow(i)}
+                  >
+                    ✕
+                  </button>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+      <button
+        type="button"
+        className="btn btn-secondary btn-sm"
+        style={{ marginTop: "0.6rem" }}
+        onClick={addRow}
+        disabled={disabled}
+      >
+        ➕ Add row
+      </button>
+    </div>
+  );
+}
+
+function PanelInput() {
+  return (
+    <div
+      style={{
+        padding: "1rem",
+        border: "1px solid var(--gray-200)",
+        borderRadius: "0.75rem",
+        background: "var(--gray-50)",
+      }}
+    >
+      <p style={{ fontSize: "0.82rem", color: "var(--gray-400)", margin: 0 }}>
+        Static panel — no answer collected. Nested fields render inside on the
+        public form (future enhancement).
+      </p>
+    </div>
+  );
+}
+
+function PanelDynamicInput({ field, value, onChange, disabled }: FieldRenderProps) {
+  const template = parseJsonArray<{ value: string; text?: string; label?: string; placeholder?: string }>(field.rows);
+  const instances: Record<string, unknown>[] = Array.isArray(value) ? value : [];
+
+  const handleChange = (idx: number, fieldName: string, val: unknown) => {
+    if (disabled) return;
+    const next = [...instances];
+    if (!next[idx]) next[idx] = {};
+    next[idx][fieldName] = val;
+    onChange(next);
+  };
+
+  const addInstance = () => onChange([...instances, {}]);
+  const removeInstance = (idx: number) => onChange(instances.filter((_, i) => i !== idx));
+
+  if (!template.length) {
+    return (
+      <p style={{ fontSize: "0.82rem", color: "var(--gray-400)", margin: 0 }}>
+        Configure template fields in the inspector.
+      </p>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+      {instances.map((instance, i) => (
+        <div
+          key={i}
+          style={{
+            padding: "1rem",
+            border: "1.5px solid var(--gray-200)",
+            borderRadius: "0.75rem",
+            background: "#fff",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+            <span style={{ fontWeight: 600, color: "var(--gray-800)" }}>Instance {i + 1}</span>
+            <button
+              type="button"
+              className="qb-icon-btn danger"
+              title="Remove instance"
+              aria-label={`Remove instance ${i + 1}`}
+              disabled={disabled}
+              onClick={() => removeInstance(i)}
+            >
+              ✕
+            </button>
+          </div>
+          {template.map((f, j) => (
+            <div key={j} className="form-group" style={{ marginBottom: "0.5rem" }}>
+              <label className="form-label" style={{ fontSize: "0.85rem" }}>
+                {f.text || f.label || `Field ${j + 1}`}
+              </label>
+              <input
+                className="form-input"
+                style={{ fontSize: "0.85rem" }}
+                value={String((instance as Record<string, unknown>)[f.value ?? `field_${j}`] ?? "")}
+                onChange={(e) => handleChange(i, f.value ?? `field_${j}`, e.target.value)}
+                disabled={disabled}
+                placeholder={f.placeholder}
+              />
+            </div>
+          ))}
+        </div>
+      ))}
+      {instances.length === 0 && (
+        <p style={{ fontSize: "0.82rem", color: "var(--gray-400)", margin: 0 }}>
+          No instances yet. Click &quot;Add instance&quot; to start.
+        </p>
+      )}
+      <button
+        type="button"
+        className="btn btn-secondary btn-sm"
+        onClick={addInstance}
+        disabled={disabled}
+      >
+        ➕ Add instance
+      </button>
+    </div>
+  );
+}
+
+function ExpressionInput({ field, value, disabled }: FieldRenderProps) {
+  const formula = field.expression ?? "";
+  const result = typeof value === "string" ? value : "";
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+      <div className="form-group">
+        <label className="form-label">Formula</label>
+        <code
+          style={{
+            display: "block",
+            padding: "0.6rem 0.8rem",
+            background: "var(--gray-100)",
+            borderRadius: "0.4rem",
+            fontSize: "0.82rem",
+            color: "var(--brand-700)",
+            fontFamily: "monospace",
+            wordBreak: "break-all",
+          }}
+        >
+          {formula || "(no formula)"}
+        </code>
+      </div>
+      <div className="form-group">
+        <label className="form-label">Computed Value</label>
+        <div
+          style={{
+            padding: "0.6rem 0.8rem",
+            background: disabled ? "var(--gray-50)" : "var(--brand-50)",
+            borderRadius: "0.4rem",
+            fontSize: "0.95rem",
+            fontWeight: 600,
+            color: result ? "var(--brand-700)" : "var(--gray-400)",
+            fontFamily: "monospace",
+          }}
+        >
+          {result || "(not computed yet)"}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const RENDERERS: Record<string, (props: FieldRenderProps) => React.ReactElement> = {
   text: TextInput,
   textarea: TextareaInput,
   number: NumberInput,
   date: DateInput,
+  time: TimeInput,
+  datetime: DateTimeInput,
   rating: RatingInput,
   dropdown: DropdownInput,
   radiogroup: RadioGroupInput,
   boolean: BooleanInput,
   tagbox: TagboxInput,
+  ranking: RankingInput,
+  imagepicker: ImagePickerInput,
+  multipletext: MultipleTextInput,
+  signaturepad: SignaturePadInput,
   file: FileInput,
+  matrix: MatrixInput,
+  matrixdropdown: MatrixDropdownInput,
+  matrixdynamic: MatrixDynamicInput,
+  panel: PanelInput,
+  paneldynamic: PanelDynamicInput,
+  expression: ExpressionInput,
 };
 
 /**

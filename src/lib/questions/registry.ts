@@ -151,7 +151,24 @@ export function parseJsonArray<T = unknown>(raw?: string | null): T[] {
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as T[]) : [];
+    if (!Array.isArray(parsed)) return [];
+    // The organizer inspector stores rows/columns double-encoded: an array
+    // whose elements are themselves JSON strings (QuestionInspector's
+    // RowsEditor `JSON.stringify`s each entry, then stringifies the array).
+    // Unwrap one extra level so renderers receive plain objects.
+    //
+    // Only strings that decode to an object/array are unwrapped: plain string
+    // arrays are a valid shape for imagepicker and multipletext, and their
+    // labels must survive untouched.
+    return parsed.map((item) => {
+      if (typeof item !== "string") return item;
+      try {
+        const inner = JSON.parse(item);
+        return inner !== null && typeof inner === "object" ? inner : item;
+      } catch {
+        return item;
+      }
+    }) as T[];
   } catch {
     return [];
   }

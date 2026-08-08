@@ -112,6 +112,7 @@ export function draftsFromFields(
     maxFiles?: number | null;
     maxFileSize?: number | null;
     acceptedTypes?: string | null;
+    rows?: string | null;
   }[],
   parseOptions: (o?: string | null) => string[]
 ): QuestionDraft[] {
@@ -134,5 +135,6 @@ export function draftsFromFields(
     maxFiles: str(f.maxFiles),
     maxFileSize: str(f.maxFileSize),
     acceptedTypes: f.acceptedTypes ?? undefined,
+    rows: f.rows ?? undefined,
   }));
 }
