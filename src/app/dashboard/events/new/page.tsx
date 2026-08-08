@@ -2,6 +2,8 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import Sidebar from "@/components/Sidebar";
 import QuestionEditor, {
   createEmptyDraft,
   draftToPayload,
@@ -77,6 +79,7 @@ function ImageUploadInput({
 
 export default function CreateEventPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -189,14 +192,11 @@ export default function CreateEventPage() {
 
   return (
     <div className="dash-layout">
-      <aside className="dash-sidebar no-print">
-        <div style={{ marginBottom: "2rem", padding: "0.5rem" }}>
-          <p style={{ fontSize: "0.75rem", color: "var(--gray-400)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.5rem" }}>Organizer</p>
-        </div>
-        <a href="/dashboard" className="dash-sidebar-link">📊 Overview</a>
-        <a href="/dashboard/events" className="dash-sidebar-link">📅 My Events</a>
-        <a href="/dashboard/events/new" className="dash-sidebar-link active">➕ Create Event</a>
-      </aside>
+      <Sidebar
+        userName={session?.user?.name}
+        userEmail={session?.user?.email}
+        role="ORGANIZER"
+      />
 
       <main className="dash-main">
         <div className="page-header">
@@ -228,7 +228,7 @@ export default function CreateEventPage() {
               {/* Event Type */}
               <div className="form-group">
                 <label className="form-label">Event Type <span className="req">*</span></label>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div className="form-grid-2">
                   <label style={{
                     display: "flex", flexDirection: "column", gap: "0.25rem", padding: "1rem",
                     border: `2px solid ${eventType === "STANDARD" ? "var(--brand-500)" : "var(--gray-200)"}`,
@@ -269,7 +269,7 @@ export default function CreateEventPage() {
               </div>
 
               {/* Start & End Dates */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+              <div className="form-grid-2">
                 <div className="form-group">
                   <label className="form-label">Start Date <span className="req">*</span></label>
                   <input type="date" className="form-input" value={date} onChange={(e) => setDate(e.target.value)} required />
@@ -289,7 +289,7 @@ export default function CreateEventPage() {
               </div>
 
               {/* Location & Capacity */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+              <div className="form-grid-2">
                 <div className="form-group">
                   <label className="form-label">Location</label>
                   <input className="form-input" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Venue or Online" />
@@ -343,7 +343,7 @@ export default function CreateEventPage() {
                       onChange={setBadgeBackgroundURL}
                     />
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                    <div className="form-grid-2">
                       <div className="form-group" style={{ margin: 0 }}>
                         <label className="form-label">Badge Size</label>
                         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
@@ -395,7 +395,7 @@ export default function CreateEventPage() {
                       <button type="button" className="btn btn-danger btn-sm" onClick={() => removeTicket(i)}>Remove</button>
                     )}
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                  <div className="form-grid-2">
                     <div className="form-group">
                       <label className="form-label">Ticket Name <span className="req">*</span></label>
                       <input className="form-input" value={t.name} onChange={(e) => updateTicket(i, "name", e.target.value)} placeholder="e.g. General Admission" required />

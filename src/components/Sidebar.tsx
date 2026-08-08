@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import MobileDashNav from "./MobileDashNav";
 
 interface SidebarProps {
   userName: string | null | undefined;
@@ -26,7 +27,8 @@ export default function Sidebar({
   };
 
   return (
-    <aside className="dash-sidebar no-print">
+    <>
+      <aside className="dash-sidebar no-print">
       {/* User profile header with solid contrast */}
       <div style={{
         marginBottom: "2rem",
@@ -151,6 +153,10 @@ export default function Sidebar({
           <span className="dash-sidebar-icon">🚪</span> Sign out
         </button>
       </div>
-    </aside>
+      </aside>
+
+      {/* Mobile bottom tab bar — replaces the hamburger drawer as primary nav on small screens */}
+      <MobileDashNav role={role} userName={userName} />
+    </>
   );
 }

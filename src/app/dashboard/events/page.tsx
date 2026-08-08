@@ -32,12 +32,14 @@ export default async function OrganizerEventsPage() {
       />
 
       <main className="dash-main">
-        <div className="page-header">
+        <div className="page-header" style={{ flexWrap: "nowrap", alignItems: "center" }}>
           <div>
-            <h1 className="page-title">{isAdmin ? "Platform Events" : "My Events"}</h1>
+            <h1 className="page-title" style={{ fontSize: "1.35rem" }}>{isAdmin ? "Platform Events" : "My Events"}</h1>
             <p className="page-subtitle">{events.length} event{events.length !== 1 ? "s" : ""} total</p>
           </div>
-          <Link href="/dashboard/events/new" className="btn btn-primary no-print">+ Create Event</Link>
+          <Link href="/dashboard/events/new" className="btn btn-primary btn-sm no-print" style={{ whiteSpace: "nowrap", flexShrink: 0 }}>
+            + Create Event
+          </Link>
         </div>
 
         {events.length === 0 ? (
@@ -49,7 +51,8 @@ export default async function OrganizerEventsPage() {
           </div>
         ) : (
           <div className="card">
-            <div className="table-wrapper" style={{ border: "none" }}>
+            {/* Desktop Table View */}
+            <div className="table-wrapper hide-mobile" style={{ border: "none" }}>
               <table>
                 <thead>
                   <tr>
@@ -108,6 +111,41 @@ export default async function OrganizerEventsPage() {
                   })}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Cards View (no inner scrolling) */}
+            <div className="dash-event-rows">
+              {events.map((ev) => (
+                <div key={ev.id} style={{ padding: "1rem", borderBottom: "1px solid var(--gray-100)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem", marginBottom: "0.4rem" }}>
+                    <div>
+                      <Link href={`/events/${ev.slug}`} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700, color: "var(--gray-900)", fontSize: "0.95rem", textDecoration: "none" }}>
+                        {ev.title}
+                      </Link>
+                      {ev.location && (
+                        <p style={{ fontSize: "0.75rem", color: "var(--gray-500)", marginTop: "0.2rem" }}>
+                          📍 {ev.location}
+                        </p>
+                      )}
+                    </div>
+                    {ev.isPublished ? (
+                      <span className="badge badge-green" style={{ flexShrink: 0 }}>Published</span>
+                    ) : (
+                      <span className="badge badge-gray" style={{ flexShrink: 0 }}>Draft</span>
+                    )}
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.75rem", paddingTop: "0.5rem", borderTop: "1px dashed var(--gray-100)" }}>
+                    <div style={{ fontSize: "0.78rem", color: "var(--gray-600)" }}>
+                      <span>📅 {new Date(ev.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                      <span style={{ marginLeft: "0.75rem", fontWeight: 600, color: "var(--gray-800)" }}>👥 {ev._count.registrations} {ev.capacity ? `/ ${ev.capacity}` : ""}</span>
+                    </div>
+                    <Link href={`/dashboard/events/${ev.slug}`} className="btn btn-ghost btn-sm">
+                      Manage →
+                    </Link>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}

@@ -128,7 +128,7 @@ export default function BadgeDesignerTab({ event }: { event: EventData }) {
     : defaultBgGradient;
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", alignItems: "start", marginTop: "0.5rem" }}>
+    <div className="grid-2" style={{ alignItems: "start", marginTop: "0.5rem" }}>
       {/* Configuration column */}
       <div className="card card-body" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
         <div>
@@ -238,7 +238,7 @@ export default function BadgeDesignerTab({ event }: { event: EventData }) {
         )}
 
         {/* Layout Dimensions */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+        <div className="form-grid-2">
           <div className="form-group">
             <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: "0.35rem" }}>
               Badge Size
@@ -290,7 +290,7 @@ export default function BadgeDesignerTab({ event }: { event: EventData }) {
             {saving ? <><span className="spinner" /> Saving…</> : "💾 Save Layout Design"}
           </button>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+          <div className="form-grid-2" style={{ gap: "0.75rem" }}>
             <Link
               href={`/dashboard/events/${event.slug}/print-badges`}
               className="btn btn-secondary"
@@ -321,7 +321,8 @@ export default function BadgeDesignerTab({ event }: { event: EventData }) {
         <div
           style={{
             width: previewWidth,
-            height: previewHeight,
+            maxWidth: "100%",
+            aspectRatio: `${previewWidth} / ${previewHeight}`,
             backgroundImage: simulatorBg,
             backgroundSize: "cover",
             backgroundPosition: "center",
