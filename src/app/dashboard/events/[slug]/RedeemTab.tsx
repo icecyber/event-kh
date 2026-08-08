@@ -172,7 +172,7 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
   };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", alignItems: "start" }}>
+    <div className="grid-2" style={{ alignItems: "start" }}>
       {/* Scanner */}
       <div className="card card-body">
         <h3 style={{ marginBottom: "1rem", color: "var(--gray-900)" }}>📷 QR Code Scanner</h3>
@@ -342,7 +342,7 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", borderTop: "1px solid var(--gray-100)", paddingTop: "0.75rem" }}>
+              <div className="form-grid-2" style={{ borderTop: "1px solid var(--gray-100)", paddingTop: "0.75rem" }}>
                 <div>
                   <div style={{ fontSize: "0.75rem", color: "var(--gray-400)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                     Contact Details
@@ -366,10 +366,7 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
             </div>
 
             {/* Actions Panel */}
-            <div style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              gap: "0.75rem",
+            <div className="action-row-wrap" style={{
               borderTop: "1px solid var(--gray-100)",
               paddingTop: "1rem"
             }}>

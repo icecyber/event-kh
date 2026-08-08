@@ -49,7 +49,7 @@ export default async function OrganizerEventsPage() {
           </div>
         ) : (
           <div className="card">
-            <div className="table-wrapper" style={{ border: "none" }}>
+            <div className="table-wrapper table-stack" style={{ border: "none" }}>
               <table>
                 <thead>
                   <tr>
@@ -69,7 +69,7 @@ export default async function OrganizerEventsPage() {
                       : null;
                     return (
                       <tr key={ev.id}>
-                        <td>
+                        <td data-label="Event Title">
                           <div style={{ fontWeight: 600, color: "var(--gray-900)" }}>
                             <Link href={`/events/${ev.slug}`} target="_blank" rel="noopener noreferrer" className="hover-underline" style={{ color: "inherit", textDecoration: "none" }}>
                               {ev.title}
@@ -79,12 +79,12 @@ export default async function OrganizerEventsPage() {
                             {ev.ticketTypes.map((t) => t.name).join(", ")}
                           </div>
                         </td>
-                        <td style={{ whiteSpace: "nowrap" }}>
+                        <td data-label="Date" style={{ whiteSpace: "nowrap" }}>
                           {new Date(ev.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
                           {ev.startTime && <div style={{ fontSize: "0.78rem", color: "var(--gray-400)" }}>{ev.startTime}</div>}
                         </td>
-                        <td style={{ color: "var(--gray-500)", fontSize: "0.875rem" }}>{ev.location || "—"}</td>
-                        <td>
+                        <td data-label="Location" style={{ color: "var(--gray-500)", fontSize: "0.875rem" }}>{ev.location || "—"}</td>
+                        <td data-label="Registrations">
                           <div style={{ fontWeight: 600 }}>{ev._count.registrations}</div>
                           {pct !== null && (
                             <div style={{ marginTop: 4, height: 4, width: 80, background: "var(--gray-100)", borderRadius: 999, overflow: "hidden" }}>
@@ -92,15 +92,15 @@ export default async function OrganizerEventsPage() {
                             </div>
                           )}
                         </td>
-                        <td style={{ color: "var(--gray-500)" }}>{ev.capacity ?? "Unlimited"}</td>
-                        <td>
+                        <td data-label="Capacity" style={{ color: "var(--gray-500)" }}>{ev.capacity ?? "Unlimited"}</td>
+                        <td data-label="Status">
                           {ev.isPublished ? (
                             <span className="badge badge-green">Published</span>
                           ) : (
                             <span className="badge badge-gray">Draft</span>
                           )}
                         </td>
-                        <td>
+                        <td data-label="Actions">
                           <Link href={`/dashboard/events/${ev.slug}`} className="btn btn-ghost btn-sm">Manage →</Link>
                         </td>
                       </tr>

@@ -71,31 +71,54 @@ export default async function DashboardPage() {
               {isAdmin ? "Platform-wide statistics & logs" : isOrganizer ? "Manage your events and track registrations" : "View your upcoming events and tickets"}
             </p>
           </div>
-          {(isOrganizer || isAdmin) && (
-            <Link href="/dashboard/events/new" className="btn btn-primary no-print">
-              + Create Event
-            </Link>
-          )}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            {(isOrganizer || isAdmin) && (
+              <Link href="/dashboard/events/new" className="btn btn-primary no-print hide-mobile">
+                + Create Event
+              </Link>
+            )}
+            <div
+              title={session.user.name || "User"}
+              className="no-print hide-mobile"
+              style={{
+                width: 40, height: 40, borderRadius: "50%",
+                background: isAdmin ? "var(--rose-600)" : isOrganizer ? "var(--blue-600)" : "var(--emerald-600)",
+                color: "#fff",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontWeight: 700, fontSize: "0.95rem",
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                flexShrink: 0,
+              }}
+            >
+              {session.user.name ? session.user.name.charAt(0).toUpperCase() : "U"}
+            </div>
+          </div>
         </div>
+
 
         {(isOrganizer || isAdmin) ? (
           <>
-            {/* Stats */}
-            <div className="grid-3" style={{ marginBottom: "2rem" }}>
-              <div className="stat-card">
-                <div className="stat-icon stat-icon-blue">📅</div>
-                <div className="stat-value">{stats.events}</div>
-                <div className="stat-label">Total Events</div>
+            {/* Overview */}
+            <div className="card dash-overview-card" style={{ marginBottom: "1.5rem" }}>
+              <div className="card-body" style={{ borderBottom: "1px solid var(--gray-100)" }}>
+                <h3 style={{ color: "var(--gray-900)" }}>Overview</h3>
               </div>
-              <div className="stat-card">
-                <div className="stat-icon stat-icon-green">👥</div>
-                <div className="stat-value">{stats.registrations}</div>
-                <div className="stat-label">Total Registrations</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-icon stat-icon-purple">✅</div>
-                <div className="stat-value">{stats.checkedIn}</div>
-                <div className="stat-label">Checked In</div>
+              <div className="dash-overview-grid">
+                <div className="dash-overview-item">
+                  <div className="stat-icon stat-icon-blue">📅</div>
+                  <div className="stat-value">{stats.events}</div>
+                  <div className="stat-label">Total Events</div>
+                </div>
+                <div className="dash-overview-item">
+                  <div className="stat-icon stat-icon-green">👥</div>
+                  <div className="stat-value">{stats.registrations}</div>
+                  <div className="stat-label">Total Registrations</div>
+                </div>
+                <div className="dash-overview-item">
+                  <div className="stat-icon stat-icon-purple">✅</div>
+                  <div className="stat-value">{stats.checkedIn}</div>
+                  <div className="stat-label">Checked In</div>
+                </div>
               </div>
             </div>
 
@@ -113,42 +136,71 @@ export default async function DashboardPage() {
                   <Link href="/dashboard/events/new" className="btn btn-primary btn-sm">+ Create Event</Link>
                 </div>
               ) : (
-                <div className="table-wrapper" style={{ border: "none", borderRadius: 0 }}>
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Event</th>
-                        <th>Date</th>
-                        <th>Registrations</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentEvents.map((ev) => (
-                        <tr key={ev.id}>
-                          <td style={{ fontWeight: 600, color: "var(--gray-900)" }}>
-                            <Link href={`/events/${ev.slug}`} target="_blank" rel="noopener noreferrer" className="hover-underline" style={{ color: "inherit", textDecoration: "none" }}>
-                              {ev.title}
-                            </Link>
-                          </td>
-                          <td>{new Date(ev.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</td>
-                          <td>{ev._count.registrations}</td>
-                          <td>
-                            {ev.isPublished ? (
-                              <span className="badge badge-green">Published</span>
-                            ) : (
-                              <span className="badge badge-gray">Draft</span>
-                            )}
-                          </td>
-                          <td>
-                            <Link href={`/dashboard/events/${ev.slug}`} className="btn btn-ghost btn-sm">Manage →</Link>
-                          </td>
+                <>
+                  {/* Desktop: full table */}
+                  <div className="table-wrapper hide-mobile" style={{ border: "none", borderRadius: 0 }}>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Event</th>
+                          <th>Date</th>
+                          <th>Registrations</th>
+                          <th>Status</th>
+                          <th>Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {recentEvents.map((ev) => (
+                          <tr key={ev.id}>
+                            <td style={{ fontWeight: 600, color: "var(--gray-900)" }}>
+                              <Link href={`/events/${ev.slug}`} target="_blank" rel="noopener noreferrer" className="hover-underline" style={{ color: "inherit", textDecoration: "none" }}>
+                                {ev.title}
+                              </Link>
+                            </td>
+                            <td>{new Date(ev.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</td>
+                            <td>{ev._count.registrations}</td>
+                            <td>
+                              {ev.isPublished ? (
+                                <span className="badge badge-green">Published</span>
+                              ) : (
+                                <span className="badge badge-gray">Draft</span>
+                              )}
+                            </td>
+                            <td>
+                              <Link href={`/dashboard/events/${ev.slug}`} className="btn btn-ghost btn-sm">Manage →</Link>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile: row list */}
+                  <div className="dash-event-rows">
+                    {recentEvents.map((ev) => (
+                      <Link
+                        key={ev.id}
+                        href={`/dashboard/events/${ev.slug}`}
+                        className="dash-event-row"
+                      >
+                        <div className="dash-event-row-main">
+                          <p className="dash-event-row-title">{ev.title}</p>
+                          <p className="dash-event-row-date">
+                            📅 {new Date(ev.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                          </p>
+                        </div>
+                        <div className="dash-event-row-side">
+                          <span className="dash-event-row-regs">👥 {ev._count.registrations}</span>
+                          {ev.isPublished ? (
+                            <span className="badge badge-green">Published</span>
+                          ) : (
+                            <span className="badge badge-gray">Draft</span>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           </>
@@ -166,7 +218,7 @@ export default async function DashboardPage() {
                 <Link href="/events" className="btn btn-primary btn-sm">Browse Events</Link>
               </div>
             ) : (
-              <div className="table-wrapper" style={{ border: "none", borderRadius: 0 }}>
+              <div className="table-wrapper table-stack" style={{ border: "none", borderRadius: 0 }}>
                 <table>
                   <thead>
                     <tr>
@@ -180,21 +232,21 @@ export default async function DashboardPage() {
                   <tbody>
                     {myRegistrations.map((reg) => (
                       <tr key={reg.id}>
-                        <td style={{ fontWeight: 600, color: "var(--gray-900)" }}>
+                        <td data-label="Event" style={{ fontWeight: 600, color: "var(--gray-900)" }}>
                           <Link href={`/events/${reg.event.slug}`} className="hover-underline" style={{ color: "inherit", textDecoration: "none" }}>
                             {reg.event.title}
                           </Link>
                         </td>
-                        <td>{new Date(reg.event.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</td>
-                        <td><span className="badge badge-purple">{reg.ticketType.name}</span></td>
-                        <td>
+                        <td data-label="Date">{new Date(reg.event.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</td>
+                        <td data-label="Ticket"><span className="badge badge-purple">{reg.ticketType.name}</span></td>
+                        <td data-label="Status">
                           {reg.checkedInAt ? (
                             <span className="badge badge-green">✅ Checked In</span>
                           ) : (
                             <span className="badge badge-blue">🎟️ Confirmed</span>
                           )}
                         </td>
-                        <td>
+                        <td data-label="Actions">
                           <Link href={`/events/${reg.event.slug}/confirmation/${reg.id}`} className="btn btn-ghost btn-sm">View Ticket →</Link>
                         </td>
                       </tr>

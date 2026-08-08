@@ -212,7 +212,7 @@ export default function ParticipantsTab({
           <p>{debouncedSearch ? "Try a different search term." : "Share the event link to start receiving registrations."}</p>
         </div>
       ) : (
-        <div className="table-wrapper">
+        <div className="table-wrapper table-stack">
           <table id="participants-table">
             <thead>
               <tr>
@@ -232,14 +232,14 @@ export default function ParticipantsTab({
 
                 return (
                   <tr key={p.id}>
-                    <td style={{ color: "var(--gray-400)", fontWeight: 500 }}>{idx + 1}</td>
-                    <td style={{ fontWeight: 600, color: "var(--gray-900)" }}>{name}</td>
-                    <td style={{ color: "var(--gray-500)" }}>{contact}</td>
-                    <td><span className="badge badge-purple">{p.ticketType.name}</span></td>
-                    <td style={{ color: "var(--gray-500)", fontSize: "0.85rem", whiteSpace: "nowrap" }}>
+                    <td data-label="#" style={{ color: "var(--gray-400)", fontWeight: 500 }}>{idx + 1}</td>
+                    <td data-label="Name" style={{ fontWeight: 600, color: "var(--gray-900)" }}>{name}</td>
+                    <td data-label="Email / Phone" style={{ color: "var(--gray-500)" }}>{contact}</td>
+                    <td data-label="Ticket"><span className="badge badge-purple">{p.ticketType.name}</span></td>
+                    <td data-label="Registered" style={{ color: "var(--gray-500)", fontSize: "0.85rem", whiteSpace: "nowrap" }}>
                       {new Date(p.registrationDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                     </td>
-                    <td>
+                    <td data-label="Status">
                       {p.checkedInAt ? (
                         <div>
                           <span className="badge badge-green">✅ Checked In</span>
@@ -251,7 +251,7 @@ export default function ParticipantsTab({
                         <span className="badge badge-blue">🎟️ Registered</span>
                       )}
                     </td>
-                    <td className="no-print">
+                    <td data-label="Actions" className="no-print">
                       <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
                         {!p.checkedInAt ? (
                           <button

@@ -204,7 +204,7 @@ export default function EditEventForm({
               rows={4}
             />
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div className="form-grid-2">
             <div className="form-group">
               <label className="form-label" style={labelStyle}>Start Date</label>
               <input type="date" className="form-input" value={date} onChange={(e) => setDate(e.target.value)} required />
@@ -214,7 +214,7 @@ export default function EditEventForm({
               <input type="date" className="form-input" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
             </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div className="form-grid-2">
             <div className="form-group">
               <label className="form-label" style={labelStyle}>Start Time</label>
               <input type="text" className="form-input" placeholder="e.g. 09:00 AM" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
@@ -224,7 +224,7 @@ export default function EditEventForm({
               <input type="text" className="form-input" placeholder="e.g. 05:00 PM" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
             </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div className="form-grid-2">
             <div className="form-group">
               <label className="form-label" style={labelStyle}>Location</label>
               <input type="text" className="form-input" placeholder="e.g. Phnom Penh, Cambodia" value={location} onChange={(e) => setLocation(e.target.value)} />
@@ -278,7 +278,7 @@ export default function EditEventForm({
 
         {badgeEnabled && (
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+            <div className="form-grid-2">
               <div className="form-group">
                 <label className="form-label" style={labelStyle}>Badge Size</label>
                 <select className="form-select" value={badgeSize} onChange={(e) => setBadgeSize(e.target.value)}>

@@ -23,7 +23,7 @@ export default function NavBar() {
   }, []);
 
   return (
-    <header className="nav-bar">
+    <header className={`nav-bar${isOnDash ? " nav-bar-dash" : ""}`}>
       {/* Logo */}
       <Link href="/" className="nav-logo">
         <div className="nav-logo-icon">⚡</div>

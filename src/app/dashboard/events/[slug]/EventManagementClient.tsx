@@ -147,7 +147,7 @@ export default function EventManagementClient({ event }: { event: EventData }) {
         </div>
 
         {/* Stats row */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem", marginBottom: "1.75rem" }}>
+        <div className="stat-grid-mobile" style={{ marginBottom: "1.75rem" }}>
           <div className="stat-card">
             <div className="stat-icon stat-icon-blue">👥</div>
             <div className="stat-value">{event.totalRegistrations}</div>
@@ -191,7 +191,7 @@ export default function EventManagementClient({ event }: { event: EventData }) {
 
         {/* Tab content */}
         {activeTab === "Overview" && (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+          <div className="grid-2">
             <div className="card card-body">
               <h3 style={{ marginBottom: "1rem", color: "var(--gray-900)" }}>Event Details</h3>
               <dl style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
