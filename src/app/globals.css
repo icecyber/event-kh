@@ -1042,7 +1042,7 @@ tr:hover td      { background: #fafbff; }
   .mobile-dash-nav { display: flex; }
   .dash-tile-grid { display: grid; }
   .nav-bar-dash { display: none; }
-  .page-header { flex-direction: column; align-items: flex-start; }
+  .page-header { flex-direction: row; align-items: center; justify-content: space-between; gap: 0.5rem; }
   .hero { padding: 3.5rem 1rem; }
   .hero h1 { font-size: 2rem !important; }
   .hero p  { font-size: 0.975rem; }
@@ -1389,8 +1389,13 @@ tr:hover td      { background: #fafbff; }
     z-index: 50;
     background: rgba(248, 250, 252, 0.9);
     backdrop-filter: blur(8px);
-    padding: 0.5rem 0;
+    padding: 0.5rem 0.5rem;
     border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
   }
   .stat-grid-mobile {
     grid-template-columns: repeat(2, 1fr);
