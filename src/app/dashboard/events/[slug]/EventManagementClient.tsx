@@ -8,6 +8,8 @@ import ParticipantsTab from "./ParticipantsTab";
 import RedeemTab from "./RedeemTab";
 import EditEventForm from "./EditEventForm";
 import BadgeDesignerTab from "./BadgeDesignerTab";
+import QuestionsTab from "./QuestionsTab";
+import { getQuestionType } from "@/lib/questions";
 
 interface EventData {
   id: string;
@@ -33,10 +35,37 @@ interface EventData {
   totalRegistrations: number;
   checkedIn: number;
   ticketTypes: { id: string; name: string; price: number; quantityAvailable?: number | null }[];
-  customFields: { id: string; label: string; fieldType: string; required: boolean; options?: string | null }[];
+  customFields: {
+    id: string;
+    label: string;
+    fieldType: string;
+    required: boolean;
+    options?: string | null;
+    placeholder?: string | null;
+    helpText?: string | null;
+    minLength?: number | null;
+    maxLength?: number | null;
+    regex?: string | null;
+    minValue?: number | null;
+    maxValue?: number | null;
+    scale?: number | null;
+    rateType?: string | null;
+    maxFiles?: number | null;
+    maxFileSize?: number | null;
+    acceptedTypes?: string | null;
+  }[];
 }
 
-type Tab = "Overview" | "Participants" | "Redeem" | "Badge Designer" | "Settings";
+type Tab = "Overview" | "Participants" | "Redeem" | "Badge Designer" | "Questions" | "Settings";
+
+const TAB_ICONS: Record<string, string> = {
+  Overview: "📋 ",
+  Participants: "👥 ",
+  Redeem: "📲 ",
+  "Badge Designer": "🎨 ",
+  Questions: "❓ ",
+  Settings: "⚙️ ",
+};
 
 export default function EventManagementClient({ event }: { event: EventData }) {
   const { data: session } = useSession();
@@ -45,7 +74,7 @@ export default function EventManagementClient({ event }: { event: EventData }) {
   const [publishing, setPublishing] = useState(false);
   const [shareUrl, setShareUrl] = useState(`/events/${event.slug}/register`);
 
-  const tabsList = ["Overview", "Participants", "Redeem", "Badge Designer", "Settings"];
+  const tabsList = ["Overview", "Participants", "Redeem", "Badge Designer", "Questions", "Settings"];
 
   useEffect(() => {
     setShareUrl(`${window.location.origin}/events/${event.slug}/register`);
@@ -154,7 +183,7 @@ export default function EventManagementClient({ event }: { event: EventData }) {
               onClick={() => setActiveTab(tab as Tab)}
               id={`tab-${tab.toLowerCase().replace(" ", "-")}`}
             >
-              {tab === "Overview" ? "📋 " : tab === "Participants" ? "👥 " : tab === "Appointments" ? "🤝 " : tab === "Redeem" ? "📲 " : tab === "Badge Designer" ? "🎨 " : "⚙️ "}
+              {TAB_ICONS[tab] ?? "⚙️ "}
               {tab}
             </button>
           ))}
@@ -195,7 +224,17 @@ export default function EventManagementClient({ event }: { event: EventData }) {
             </div>
 
             <div className="card card-body">
-              <h3 style={{ marginBottom: "1rem", color: "var(--gray-900)" }}>Custom Form Fields</h3>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", gap: "0.75rem" }}>
+                <h3 style={{ margin: 0, color: "var(--gray-900)" }}>Custom Form Fields</h3>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => setActiveTab("Questions")}
+                  style={{ whiteSpace: "nowrap", flexShrink: 0, fontSize: "0.8rem" }}
+                >
+                  Manage →
+                </button>
+              </div>
               {event.customFields.length === 0 ? (
                 <p style={{ color: "var(--gray-400)", fontSize: "0.875rem" }}>No custom fields — attendees only need to select a ticket type.</p>
               ) : (
@@ -207,7 +246,9 @@ export default function EventManagementClient({ event }: { event: EventData }) {
                         <span style={{ fontWeight: 600, color: "var(--gray-800)" }}>{f.label}</span>
                         {f.required && <span style={{ color: "var(--rose-500)", fontSize: "0.8rem", marginLeft: 4 }}>*</span>}
                       </div>
-                      <span className="badge badge-blue">{f.fieldType}</span>
+                      <span className="badge badge-blue">
+                        {getQuestionType(f.fieldType)?.label ?? f.fieldType}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -229,11 +270,31 @@ export default function EventManagementClient({ event }: { event: EventData }) {
 
         {activeTab === "Badge Designer" && <BadgeDesignerTab event={event} />}
 
+        {activeTab === "Questions" && <QuestionsTab event={event} />}
+
         {activeTab === "Settings" && (
           <div style={{ maxWidth: 680 }}>
             <h3 style={{ marginBottom: "1.5rem", color: "var(--gray-900)" }}>⚙️ Edit Event</h3>
 
-            <EditEventForm event={event} />
+            <div
+              className="alert alert-info"
+              style={{ marginBottom: "1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}
+            >
+              <span>📋 Registration questions are managed in the Questions tab.</span>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => setActiveTab("Questions")}
+                style={{ whiteSpace: "nowrap", flexShrink: 0 }}
+              >
+                Go to Questions →
+              </button>
+            </div>
+
+            {/* Questions are managed in the Questions tab; passing
+                showQuestions={false} also omits customFields from the PATCH
+                payload so saving Settings cannot delete them. */}
+            <EditEventForm event={event} showQuestions={false} />
 
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "2rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", border: "1.5px solid var(--gray-200)", borderRadius: "0.75rem" }}>

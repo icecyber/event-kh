@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useLang } from "@/components/LangProvider";
 import TranslateText from "@/components/TranslateText";
+import { getQuestionType, validateAnswer } from "@/lib/questions";
+import { QuestionRenderer, getInitialValue } from "@/lib/questions/renderers";
 
 interface CustomField {
   id: string;
@@ -13,6 +15,19 @@ interface CustomField {
   required: boolean;
   options?: string | null;
   order: number;
+  placeholder?: string | null;
+  helpText?: string | null;
+  minLength?: number | null;
+  maxLength?: number | null;
+  regex?: string | null;
+  minValue?: number | null;
+  maxValue?: number | null;
+  step?: number | null;
+  scale?: number | null;
+  rateType?: string | null;
+  maxFiles?: number | null;
+  maxFileSize?: number | null;
+  acceptedTypes?: string | null;
 }
 
 interface TicketType {
@@ -88,7 +103,13 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
   const isGuest = !session; // all event types support guest registration
 
   const [selectedTicket, setSelectedTicket] = useState(eventData.ticketTypes[0]?.id ?? "");
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, unknown>>(() => {
+    const initial: Record<string, unknown> = {};
+    for (const field of eventData.customFields) {
+      initial[field.id] = getInitialValue(field);
+    }
+    return initial;
+  });
 
   // Core attendee info — always collected
   const [guestName, setGuestName] = useState(session?.user?.name ?? "");
@@ -135,12 +156,24 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
       return;
     }
 
+    // Validate custom answers with the same registry rules the server applies.
+    for (const field of eventData.customFields) {
+      const validationError = validateAnswer(answers[field.id], field);
+      if (validationError) {
+        setError(validationError);
+        setSubmitting(false);
+        return;
+      }
+    }
+
     try {
-      const formattedAnswers = eventData.customFields.map((field) => ({
-        customFieldId: field.id,
-        fieldName: field.label,
-        answerValue: answers[field.id] ?? "",
-      }));
+      const formattedAnswers = eventData.customFields
+        .filter((field) => !getQuestionType(field.fieldType)?.noAnswer)
+        .map((field) => ({
+          customFieldId: field.id,
+          fieldName: field.label,
+          answerValue: answers[field.id] ?? "",
+        }));
 
       const fullPhone = getFullPhoneNumber();
 
@@ -175,7 +208,7 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
     }
   };
 
-  const setAnswer = (fieldId: string, value: string) => {
+  const setAnswer = (fieldId: string, value: unknown) => {
     setAnswers((prev) => ({ ...prev, [fieldId]: value }));
   };
 
@@ -332,70 +365,28 @@ export default function RegistrationForm({ eventData }: { eventData: EventData }
         </div>
       )}
 
-      {/* Custom fields */}
-      {eventData.customFields.map((field) => {
-        const opts = field.options ? JSON.parse(field.options) as string[] : [];
+      {/* Custom fields — rendered from the question type registry */}
+      {eventData.customFields.map((field) => (
+        <div key={field.id} className="form-group">
+          <label className="form-label">
+            <TranslateText text={field.label} />
+            {field.required && <span className="req">*</span>}
+          </label>
 
-        return (
-          <div key={field.id} className="form-group">
-            <label className="form-label">
-              <TranslateText text={field.label} />
-              {field.required && <span className="req">*</span>}
-            </label>
+          <QuestionRenderer
+            field={field}
+            value={answers[field.id]}
+            onChange={(value) => setAnswer(field.id, value)}
+            eventId={eventData.id}
+          />
 
-            {field.fieldType === "text" && (
-              <input
-                type="text"
-                className="form-input"
-                value={answers[field.id] ?? ""}
-                onChange={(e) => setAnswer(field.id, e.target.value)}
-                required={field.required}
-              />
-            )}
-            {field.fieldType === "number" && (
-              <input
-                type="number"
-                className="form-input"
-                value={answers[field.id] ?? ""}
-                onChange={(e) => setAnswer(field.id, e.target.value)}
-                required={field.required}
-              />
-            )}
-            {field.fieldType === "textarea" && (
-              <textarea
-                className="form-textarea"
-                value={answers[field.id] ?? ""}
-                onChange={(e) => setAnswer(field.id, e.target.value)}
-                required={field.required}
-              />
-            )}
-            {field.fieldType === "select" && (
-              <select
-                className="form-select"
-                value={answers[field.id] ?? ""}
-                onChange={(e) => setAnswer(field.id, e.target.value)}
-                required={field.required}
-              >
-                <option value="">Select an option…</option>
-                {opts.map((opt: string, idx: number) => (
-                  <option key={idx} value={opt}>{opt}</option>
-                ))}
-              </select>
-            )}
-            {field.fieldType === "checkbox" && (
-              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
-                <input
-                  type="checkbox"
-                  checked={answers[field.id] === "true"}
-                  onChange={(e) => setAnswer(field.id, e.target.checked ? "true" : "false")}
-                  style={{ accentColor: "var(--brand-600)", width: 18, height: 18 }}
-                />
-                <span style={{ color: "var(--gray-600)" }}>Yes</span>
-              </label>
-            )}
-          </div>
-        );
-      })}
+          {field.helpText && (
+            <span className="form-hint" style={{ color: "var(--gray-500)", fontSize: "0.8rem" }}>
+              <TranslateText text={field.helpText} />
+            </span>
+          )}
+        </div>
+      ))}
 
       {error && <div className="alert alert-error">⚠️ {error}</div>}
 

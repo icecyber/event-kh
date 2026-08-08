@@ -30,6 +30,14 @@ export async function POST(req: Request) {
         password: hashedPassword,
         role: role === "ORGANIZER" ? "ORGANIZER" : "ATTENDEE",
       },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     return NextResponse.json(user);

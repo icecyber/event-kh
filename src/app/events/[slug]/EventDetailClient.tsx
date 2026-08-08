@@ -27,6 +27,19 @@ interface EventDetailProps {
     required: boolean;
     options?: string | null;
     order: number;
+    placeholder?: string | null;
+    helpText?: string | null;
+    minLength?: number | null;
+    maxLength?: number | null;
+    regex?: string | null;
+    minValue?: number | null;
+    maxValue?: number | null;
+    step?: number | null;
+    scale?: number | null;
+    rateType?: string | null;
+    maxFiles?: number | null;
+    maxFileSize?: number | null;
+    acceptedTypes?: string | null;
   }[];
   existingRegId?: string | null;
 }

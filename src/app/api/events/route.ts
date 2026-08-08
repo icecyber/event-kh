@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { NextRequest } from "next/server";
 import { generateUniqueSlug } from "@/lib/slug";
+import { toCustomFieldData, type IncomingField } from "@/lib/questions/persistence";
 
 // GET /api/events — list all published events (public)
 export async function GET(request: NextRequest) {
@@ -105,17 +106,8 @@ export async function POST(request: NextRequest) {
           ),
         },
         customFields: {
-          create: (customFields ?? []).map(
-            (
-              f: { label: string; fieldType: string; required?: boolean; options?: string[]; order?: number },
-              idx: number
-            ) => ({
-              label: f.label,
-              fieldType: f.fieldType,
-              required: f.required ?? false,
-              options: f.options ? JSON.stringify(f.options) : null,
-              order: f.order ?? idx,
-            })
+          create: (customFields ?? []).map((f: IncomingField, idx: number) =>
+            toCustomFieldData(f, idx)
           ),
         },
       },

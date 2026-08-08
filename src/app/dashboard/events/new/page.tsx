@@ -2,18 +2,15 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import QuestionEditor, {
+  createEmptyDraft,
+  draftToPayload,
+  type QuestionDraft,
+} from "@/components/QuestionEditor";
 
 interface TicketTypeInput { name: string; price: number; quantityAvailable: string; }
-interface CustomFieldInput { label: string; fieldType: string; required: boolean; options: string; }
 
 const STEPS = ["Basic Info", "Tickets", "Custom Fields", "Review"];
-const FIELD_TYPES = [
-  { value: "text", label: "Short Text" },
-  { value: "textarea", label: "Long Text" },
-  { value: "select", label: "Dropdown" },
-  { value: "checkbox", label: "Checkbox (Yes/No)" },
-  { value: "number", label: "Number" },
-];
 
 const BADGE_SIZES = ["A3", "2*3", "3*4"];
 
@@ -106,7 +103,7 @@ export default function CreateEventPage() {
   ]);
 
   // Step 3: Custom fields
-  const [fields, setFields] = useState<CustomFieldInput[]>([]);
+  const [fields, setFields] = useState<QuestionDraft[]>([]);
 
   const addTicket = () => setTickets([...tickets, { name: "", price: 0, quantityAvailable: "" }]);
   const removeTicket = (i: number) => setTickets(tickets.filter((_, idx) => idx !== i));
@@ -116,12 +113,18 @@ export default function CreateEventPage() {
     setTickets(copy);
   };
 
-  const addField = () =>
-    setFields([...fields, { label: "", fieldType: "text", required: false, options: "" }]);
+  const addField = () => setFields([...fields, createEmptyDraft()]);
   const removeField = (i: number) => setFields(fields.filter((_, idx) => idx !== i));
-  const updateField = (i: number, key: keyof CustomFieldInput, val: any) => {
+  const updateField = (i: number, patch: Partial<QuestionDraft>) => {
     const copy = [...fields];
-    copy[i] = { ...copy[i], [key]: val };
+    copy[i] = { ...copy[i], ...patch };
+    setFields(copy);
+  };
+  const moveField = (from: number, to: number) => {
+    if (to < 0 || to >= fields.length) return;
+    const copy = [...fields];
+    const [moved] = copy.splice(from, 1);
+    copy.splice(to, 0, moved);
     setFields(copy);
   };
 
@@ -155,15 +158,7 @@ export default function CreateEventPage() {
           price: 0,
           quantityAvailable: t.quantityAvailable ? Number(t.quantityAvailable) : undefined,
         })),
-        customFields: fields.map((f, idx) => ({
-          label: f.label,
-          fieldType: f.fieldType,
-          required: f.required,
-          options: f.fieldType === "select" && f.options
-            ? f.options.split(",").map((o) => o.trim()).filter(Boolean)
-            : undefined,
-          order: idx,
-        })),
+        customFields: fields.map((f, idx) => draftToPayload(f, idx)),
       };
 
       const res = await fetch("/api/events", {
@@ -426,34 +421,17 @@ export default function CreateEventPage() {
                 <div className="alert alert-info">No custom fields yet. Click below to add one, or skip this step.</div>
               )}
               {fields.map((f, i) => (
-                <div key={i} style={{ border: "1.5px solid var(--gray-200)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <h4 style={{ color: "var(--gray-700)", fontWeight: 600 }}>Field #{i + 1}</h4>
-                    <button type="button" className="btn btn-danger btn-sm" onClick={() => removeField(i)}>Remove</button>
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "0.75rem" }}>
-                    <div className="form-group">
-                      <label className="form-label">Label <span className="req">*</span></label>
-                      <input className="form-input" value={f.label} onChange={(e) => updateField(i, "label", e.target.value)} placeholder="e.g. Dietary Requirements" />
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Type</label>
-                      <select className="form-select" value={f.fieldType} onChange={(e) => updateField(i, "fieldType", e.target.value)}>
-                        {FIELD_TYPES.map((ft) => <option key={ft.value} value={ft.value}>{ft.label}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  {f.fieldType === "select" && (
-                    <div className="form-group">
-                      <label className="form-label">Options (comma-separated)</label>
-                      <input className="form-input" value={f.options} onChange={(e) => updateField(i, "options", e.target.value)} placeholder="Option 1, Option 2, Option 3" />
-                    </div>
-                  )}
-                  <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "0.9rem" }}>
-                    <input type="checkbox" checked={f.required} onChange={(e) => updateField(i, "required", e.target.checked)} style={{ accentColor: "var(--brand-600)" }} />
-                    <span style={{ color: "var(--gray-600)" }}>Required field</span>
-                  </label>
-                </div>
+                <QuestionEditor
+                  key={i}
+                  draft={f}
+                  index={i}
+                  onChange={(patch) => updateField(i, patch)}
+                  onRemove={() => removeField(i)}
+                  onMoveUp={() => moveField(i, i - 1)}
+                  onMoveDown={() => moveField(i, i + 1)}
+                  canMoveUp={i > 0}
+                  canMoveDown={i < fields.length - 1}
+                />
               ))}
               <button type="button" className="btn btn-secondary" onClick={addField} style={{ alignSelf: "flex-start" }}>
                 + Add Field

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { createQRString } from "@/lib/qr";
 import { NextRequest } from "next/server";
 import crypto from "crypto";
+import { getQuestionType, serializeAnswer, validateAnswer } from "@/lib/questions";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const body = await req.json();
   const { ticketTypeId, answers, guestName, guestPhone, guestEmail } = body as {
     ticketTypeId: string;
-    answers: { customFieldId: string; fieldName: string; answerValue: string }[];
+    answers: { customFieldId: string; fieldName: string; answerValue: unknown }[];
     guestName?: string;
     guestPhone?: string;
     guestEmail?: string;
@@ -89,17 +90,31 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     return Response.json({ error: "Invalid ticket type" }, { status: 400 });
   }
 
-  // Validate required custom fields
+  // Validate custom field answers through the question registry, and build the
+  // rows to persist. Layout/computed types are skipped: they carry no answer.
+  const answerRows: { customFieldId: string; fieldName: string; answerValue: string }[] = [];
+
   for (const field of event.customFields) {
-    if (field.required) {
-      const answer = answers?.find((a) => a.customFieldId === field.id);
-      if (!answer || !answer.answerValue.trim()) {
-        return Response.json(
-          { error: `Field "${field.label}" is required` },
-          { status: 400 }
-        );
-      }
+    const config = getQuestionType(field.fieldType);
+    if (config?.noAnswer) continue;
+
+    const submitted = answers?.find((a) => a.customFieldId === field.id);
+    const rawValue = submitted?.answerValue;
+
+    const error = validateAnswer(rawValue, field);
+    if (error) {
+      return Response.json({ error }, { status: 400 });
     }
+
+    const serialized = serializeAnswer(rawValue, field.fieldType);
+    // Don't store empty answers for optional questions.
+    if (serialized === "" || serialized === "[]") continue;
+
+    answerRows.push({
+      customFieldId: field.id,
+      fieldName: field.label,
+      answerValue: serialized,
+    });
   }
 
   // Unique key for guest vs logged in user
@@ -118,11 +133,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       status: "CONFIRMED",
       qrCodeString,
       customAnswers: {
-        create: (answers ?? []).map((a) => ({
-          customFieldId: a.customFieldId,
-          fieldName: a.fieldName,
-          answerValue: a.answerValue,
-        })),
+        create: answerRows,
       },
     },
     include: {

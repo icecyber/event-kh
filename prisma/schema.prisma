@@ -70,11 +70,33 @@ model CustomField {
   id        String   @id @default(cuid())
   eventId   String
   label     String
-  fieldType String   // text | textarea | select | checkbox | number
+  fieldType String   // see src/lib/questions/registry.ts for the registered types
   required  Boolean  @default(false)
-  options   String?  // JSON array of strings for select fields
+  options   String?  // JSON array of strings for choice-based fields
   order     Int      @default(0)
   createdAt DateTime @default(now())
+
+  // --- Question type extensions (all optional; absent = type default) ---
+  placeholder   String?
+  helpText      String?
+  minLength     Int?
+  maxLength     Int?
+  regex         String?
+  minValue      Float?
+  maxValue      Float?
+  step          Float?
+  scale         Int? // rating: 5 or 10
+  rateType      String? // star | emoji | number
+  rows          String? // JSON: matrix/panel rows
+  columns       String? // JSON: matrix columns
+  rateValues    String? // JSON: custom rating values
+  // File upload
+  maxFiles      Int?
+  maxFileSize   Int?
+  acceptedTypes String?
+  // Expression / computed
+  expression    String?
+  readOnly      Boolean @default(false)
 
   event   Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
   answers CustomFieldAnswer[]
