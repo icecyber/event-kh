@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import EventsHeader from "./EventsHeader";
 import EventsList from "./EventsList";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Browse Events — EventKH",
   description: "Discover and register for upcoming events.",
