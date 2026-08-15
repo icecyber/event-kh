@@ -45,6 +45,7 @@ const queries = [
   'ALTER TABLE "Event" ADD COLUMN "badgeQrPositionX" INTEGER NOT NULL DEFAULT 50',
   'ALTER TABLE "Event" ADD COLUMN "badgeQrPositionY" INTEGER NOT NULL DEFAULT 70',
   'ALTER TABLE "Event" ADD COLUMN "badgeQrSize" INTEGER NOT NULL DEFAULT 25',
+  'ALTER TABLE "Event" ADD COLUMN "showRegistrationCount" BOOLEAN NOT NULL DEFAULT 1',
 
   // --- Pluggable question types: optional CustomField extensions ---
   'ALTER TABLE "CustomField" ADD COLUMN "placeholder" TEXT',

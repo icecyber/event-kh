@@ -59,6 +59,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     if (body.bannerImageURL !== undefined) data.bannerImageURL = body.bannerImageURL || null;
     if (body.badgeBackgroundURL !== undefined) data.badgeBackgroundURL = body.badgeBackgroundURL || null;
     if (body.badgeEnabled !== undefined) data.badgeEnabled = Boolean(body.badgeEnabled);
+    if (body.showRegistrationCount !== undefined) data.showRegistrationCount = Boolean(body.showRegistrationCount);
     if (body.badgeSize !== undefined) data.badgeSize = body.badgeSize;
     if (body.badgeOrientation !== undefined) data.badgeOrientation = body.badgeOrientation;
     if (body.badgeQrPositionX !== undefined) data.badgeQrPositionX = Number(body.badgeQrPositionX);

@@ -67,6 +67,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         bannerImageURL: event.bannerImageURL,
         eventType: event.eventType,
         organizerName: event.organizer.name ?? "Unknown",
+        showRegistrationCount: event.showRegistrationCount,
         registrationCount: event._count.registrations,
         spotsLeft,
         ticketTypes: event.ticketTypes.map((t) => ({ id: t.id, name: t.name, price: t.price })),

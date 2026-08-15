@@ -99,6 +99,7 @@ export default function CreateEventPage() {
   const [badgeSize, setBadgeSize] = useState("3*4");
   const [badgeOrientation, setBadgeOrientation] = useState<"horizontal" | "vertical">("vertical");
   const [eventType, setEventType] = useState("STANDARD");
+  const [showRegistrationCount, setShowRegistrationCount] = useState(true);
 
   // Step 2: Tickets
   const [tickets, setTickets] = useState<TicketTypeInput[]>([
@@ -156,6 +157,7 @@ export default function CreateEventPage() {
         badgeSize,
         badgeOrientation,
         eventType,
+        showRegistrationCount,
         ticketTypes: tickets.map((t) => ({
           name: t.name,
           price: 0,

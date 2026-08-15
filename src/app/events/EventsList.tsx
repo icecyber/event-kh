@@ -14,6 +14,7 @@ interface EventItem {
   bannerImageURL?: string | null;
   capacity?: number | null;
   organizerName: string;
+  showRegistrationCount: boolean;
   registrationCount: number;
   hasFreeTicket: boolean;
 }
@@ -80,10 +81,12 @@ export default function EventsList({ events }: { events: EventItem[] }) {
                     </span>
                   )}
                   <span>👤 {t("events.by")} {event.organizerName}</span>
-                  <span style={{ color: "var(--brand-600)", fontWeight: 600 }}>
-                    {event.registrationCount} {t("events.registered")}
-                    {event.capacity ? ` / ${event.capacity} ${t("events.capacity")}` : ""}
-                  </span>
+                  {event.showRegistrationCount && (
+                    <span style={{ color: "var(--brand-600)", fontWeight: 600 }}>
+                      {event.registrationCount} {t("events.registered")}
+                      {event.capacity ? ` / ${event.capacity} ${t("events.capacity")}` : ""}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
