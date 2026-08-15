@@ -42,6 +42,7 @@ model Event {
   badgeQrSize        Int      @default(25)
   isPublished        Boolean  @default(false)
   eventType          String   @default("STANDARD") // STANDARD or EXHIBITION
+  showRegistrationCount Boolean @default(true)
   endDate            DateTime?
   organizerId        String
   createdAt          DateTime @default(now())

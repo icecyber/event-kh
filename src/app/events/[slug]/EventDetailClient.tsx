@@ -17,6 +17,7 @@ interface EventDetailProps {
   bannerImageURL?: string | null;
   eventType: string;
   organizerName: string;
+  showRegistrationCount: boolean;
   registrationCount: number;
   spotsLeft: number | null;
   ticketTypes: { id: string; name: string; price: number }[];
@@ -149,14 +150,16 @@ export default function EventDetailClient({ ev }: { ev: EventDetailProps }) {
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--gray-600)", fontSize: "0.9rem" }}>
                 <span>👤</span> {t("event.organizedBy")} <strong>{ev.organizerName}</strong>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--brand-600)", fontSize: "0.9rem", fontWeight: 600 }}>
-                <span>🎟️</span> {ev.registrationCount} {t("events.registered")}
-                {ev.spotsLeft !== null && (
-                  <span style={{ color: ev.spotsLeft <= 10 ? "var(--rose-500)" : "var(--gray-500)", fontWeight: 400 }}>
-                    · {ev.spotsLeft} {t("event.spotsLeft")}
-                  </span>
-                )}
-              </div>
+              {ev.showRegistrationCount && (
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--brand-600)", fontSize: "0.9rem", fontWeight: 600 }}>
+                  <span>🎟️</span> {ev.registrationCount} {t("events.registered")}
+                  {ev.spotsLeft !== null && (
+                    <span style={{ color: ev.spotsLeft <= 10 ? "var(--rose-500)" : "var(--gray-500)", fontWeight: 400 }}>
+                      · {ev.spotsLeft} {t("event.spotsLeft")}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             {ev.description && (

@@ -28,6 +28,7 @@ export default async function EventsPage() {
     bannerImageURL: e.bannerImageURL,
     capacity: e.capacity,
     organizerName: e.organizer.name ?? "Unknown",
+    showRegistrationCount: e.showRegistrationCount,
     registrationCount: e._count.registrations,
     hasFreeTicket: e.ticketTypes.some((t) => t.price === 0),
   }));

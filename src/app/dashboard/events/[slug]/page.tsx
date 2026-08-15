@@ -59,6 +59,7 @@ export default async function EventManagePage({ params }: { params: Promise<{ sl
         badgeQrPositionY: event.badgeQrPositionY,
         badgeQrSize: event.badgeQrSize,
         eventType: event.eventType,
+        showRegistrationCount: event.showRegistrationCount,
         isPublished: event.isPublished,
         totalRegistrations: event._count.registrations,
         checkedIn,

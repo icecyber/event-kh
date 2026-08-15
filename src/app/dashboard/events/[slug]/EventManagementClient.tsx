@@ -31,6 +31,7 @@ interface EventData {
   badgeQrPositionY: number;
   badgeQrSize: number;
   eventType: string;
+  showRegistrationCount: boolean;
   isPublished: boolean;
   totalRegistrations: number;
   checkedIn: number;

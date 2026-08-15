@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
       badgeSize,
       badgeOrientation,
       eventType,
+      showRegistrationCount,
       ticketTypes,
       customFields,
     } = body;
@@ -95,6 +96,7 @@ export async function POST(request: NextRequest) {
         badgeSize: badgeSize || "3*4",
         badgeOrientation: badgeOrientation || "vertical",
         eventType: eventType || "STANDARD",
+        showRegistrationCount: showRegistrationCount !== undefined ? Boolean(showRegistrationCount) : true,
         organizerId: session.user.id,
         ticketTypes: {
           create: (ticketTypes ?? [{ name: "General", price: 0 }]).map(

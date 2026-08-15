@@ -42,6 +42,7 @@ interface EditableEvent {
   badgeSize: string;
   badgeOrientation: string;
   eventType: string;
+  showRegistrationCount: boolean;
   customFields?: EditableCustomField[];
 }
 
@@ -78,6 +79,7 @@ export default function EditEventForm({
   const [badgeSize, setBadgeSize] = useState(event.badgeSize);
   const [badgeOrientation, setBadgeOrientation] = useState(event.badgeOrientation);
   const [badgeBackgroundURL, setBadgeBackgroundURL] = useState(event.badgeBackgroundURL ?? "");
+  const [showRegistrationCount, setShowRegistrationCount] = useState(event.showRegistrationCount);
 
   // Custom Fields (Questions) State
   const [fields, setFields] = useState<QuestionDraft[]>(() =>
@@ -142,6 +144,7 @@ export default function EditEventForm({
           badgeSize,
           badgeOrientation,
           badgeBackgroundURL: badgeBackgroundURL || null,
+          showRegistrationCount,
           // Omit entirely when questions are managed elsewhere: the PATCH
           // route deletes any existing field missing from this array.
           ...(showQuestions
@@ -233,6 +236,17 @@ export default function EditEventForm({
               <label className="form-label" style={labelStyle}>Capacity</label>
               <input type="number" className="form-input" placeholder="Unlimited" value={capacity} onChange={(e) => setCapacity(e.target.value)} min={0} />
             </div>
+          </div>
+          <div className="form-group" style={{ marginTop: "0.5rem" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={showRegistrationCount}
+                onChange={(e) => setShowRegistrationCount(e.target.checked)}
+                style={{ accentColor: "var(--brand-600)", width: 18, height: 18 }}
+              />
+              <span style={{ fontWeight: 600, color: "var(--gray-700)" }}>Show registration count publicly on event page</span>
+            </label>
           </div>
         </div>
       </div>
