@@ -27,31 +27,69 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { qrCodeString, registrationId, lookupOnly } = await req.json();
+  const body = await req.json();
+  const cleanQr = typeof body.qrCodeString === "string" ? body.qrCodeString.trim() : "";
+  const cleanRegId = typeof body.registrationId === "string" ? body.registrationId.trim() : "";
+  const lookupOnly = Boolean(body.lookupOnly);
 
-  // Find registration by QR string or by ID
-  const where = qrCodeString
-    ? { qrCodeString, eventId }
-    : { id: registrationId, eventId };
-
-  const registration = await prisma.registration.findFirst({
-    where,
-    include: {
-      attendee: { select: { id: true, name: true, email: true } },
-      ticketType: true,
-    },
-  });
-
-  if (!registration) {
-    return Response.json({ error: "Registration not found" }, { status: 404 });
+  if (!cleanQr && !cleanRegId) {
+    return Response.json({ error: "Missing QR code string or registration ID" }, { status: 400 });
   }
 
+  // Find registration by exact ID or exact QR code string first
+  let registration = null;
+
+  if (cleanRegId) {
+    registration = await prisma.registration.findFirst({
+      where: { id: cleanRegId, eventId },
+      include: {
+        attendee: { select: { id: true, name: true, email: true } },
+        ticketType: true,
+      },
+    });
+  } else if (cleanQr) {
+    // 1. Try exact QR code match
+    registration = await prisma.registration.findFirst({
+      where: { qrCodeString: cleanQr, eventId },
+      include: {
+        attendee: { select: { id: true, name: true, email: true } },
+        ticketType: true,
+      },
+    });
+
+    // 2. If not found and this is a lookup/search, support searching by ID, name, email, or phone
+    if (!registration && lookupOnly) {
+      registration = await prisma.registration.findFirst({
+        where: {
+          eventId,
+          OR: [
+            { id: cleanQr },
+            { attendee: { name: { contains: cleanQr } } },
+            { attendee: { email: { contains: cleanQr } } },
+            { guestName: { contains: cleanQr } },
+            { guestEmail: { contains: cleanQr } },
+            { guestPhone: { contains: cleanQr } },
+          ],
+        },
+        include: {
+          attendee: { select: { id: true, name: true, email: true } },
+          ticketType: true,
+        },
+      });
+    }
+  }
+
+  if (!registration) {
+    return Response.json({ error: "Ticket or attendee not found" }, { status: 404 });
+  }
+
+  const attendee = registration.attendee || {
+    id: null,
+    name: registration.guestName,
+    email: registration.guestEmail || registration.guestPhone,
+  };
+
   if (lookupOnly) {
-    const attendee = registration.attendee || {
-      id: null,
-      name: registration.guestName,
-      email: registration.guestEmail || registration.guestPhone,
-    };
     return Response.json({
       ...registration,
       attendee,
@@ -59,11 +97,6 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   }
 
   if (registration.checkedInAt) {
-    const attendee = registration.attendee || {
-      id: null,
-      name: registration.guestName,
-      email: registration.guestEmail || registration.guestPhone,
-    };
     return Response.json(
       {
         error: "Already checked in",

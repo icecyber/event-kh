@@ -27,6 +27,10 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
 
   const lastScanned = useRef<string>("");
 
+  const isScanningRef = useRef(false);
+  const modalOpenRef = useRef(false);
+  modalOpenRef.current = modalOpen;
+
   useEffect(() => {
     // Preload the QrScanner chunk in the background so it starts instantly when clicked
     import("@/components/QrScanner").catch(() => {});
@@ -34,9 +38,13 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
 
   const handleRedeem = useCallback(
     async (qrCodeString: string) => {
-      if (scanning) return;
-      if (qrCodeString === lastScanned.current) return;
-      lastScanned.current = qrCodeString;
+      const code = qrCodeString?.trim();
+      if (!code) return;
+      if (isScanningRef.current || modalOpenRef.current) return;
+      if (code === lastScanned.current) return;
+
+      lastScanned.current = code;
+      isScanningRef.current = true;
       setScanning(true);
       setResult(null);
 
@@ -45,12 +53,12 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
         const res = await fetch(`/api/events/${eventId}/redeem`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ qrCodeString, lookupOnly: true }),
+          body: JSON.stringify({ qrCodeString: code, lookupOnly: true }),
         });
         const data = await res.json();
 
         if (!res.ok) {
-          setResult({ type: "error", message: data.error || "Ticket not found" });
+          setResult({ type: "error", message: data.error || "Ticket or attendee not found" });
           lastScanned.current = ""; // Reset on error so they can re-try same code if corrected
         } else {
           setActiveRegistration(data);
@@ -60,10 +68,11 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
         setResult({ type: "error", message: "Network error. Please try again." });
         lastScanned.current = "";
       } finally {
+        isScanningRef.current = false;
         setScanning(false);
       }
     },
-    [eventId, scanning]
+    [eventId]
   );
 
   const confirmRedeem = async () => {
@@ -73,7 +82,10 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
       const res = await fetch(`/api/events/${eventId}/redeem`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ qrCodeString: activeRegistration.qrCodeString }),
+        body: JSON.stringify({
+          registrationId: activeRegistration.id,
+          qrCodeString: activeRegistration.qrCodeString || undefined,
+        }),
       });
       const data = await res.json();
 
@@ -112,10 +124,10 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
       alert("Network error. Please try again.");
     } finally {
       setRedeeming(false);
-      // Reset scan cache delay
+      // Reset scan cache delay after modal close
       setTimeout(() => {
         lastScanned.current = "";
-      }, 2000);
+      }, 3000);
     }
   };
 
@@ -139,14 +151,14 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
                 body {
                   margin: 0;
                   display: flex;
-                  align-items: center;
                   justify-content: center;
-                  height: 100vh;
-                  background: white;
+                  align-items: center;
+                  min-height: 100vh;
+                  background: #fff;
                 }
                 img {
                   max-width: 100%;
-                  max-height: 100%;
+                  height: auto;
                   object-fit: contain;
                 }
               </style>
@@ -192,7 +204,7 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
         ) : (
           <>
             <QrScanner
-              active={scannerActive}
+              active={scannerActive && !modalOpen}
               onScan={handleRedeem}
               onError={(e) => setResult({ type: "error", message: e })}
             />
@@ -233,13 +245,13 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
         ) : (
           <div className="card card-body" style={{ textAlign: "center", color: "var(--gray-400)", padding: "3rem 1.5rem" }}>
             <div style={{ fontSize: "3rem", marginBottom: "0.75rem" }}>📲</div>
-            <p>Scan a QR code or enter a code manually to look up and redeem an attendee.</p>
+            <p>Scan a QR code or enter a name, email, or ticket code to look up and redeem an attendee.</p>
           </div>
         )}
 
         {/* Manual entry */}
         <div className="card card-body">
-          <h4 style={{ marginBottom: "0.75rem", color: "var(--gray-700)" }}>Manual Code Entry</h4>
+          <h4 style={{ marginBottom: "0.75rem", color: "var(--gray-700)" }}>Manual Code & Attendee Lookup</h4>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <input
               id="manual-qr-input"
@@ -247,14 +259,14 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
               value={manualCode}
               onChange={(e) => setManualCode(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleManualRedeem()}
-              placeholder="Paste QR code string…"
+              placeholder="Enter QR code, attendee name, email, or ID…"
             />
             <button
               className="btn btn-primary"
               onClick={handleManualRedeem}
               disabled={!manualCode.trim() || manualLoading}
             >
-              {manualLoading ? <span className="spinner" /> : "Redeem"}
+              {manualLoading ? <span className="spinner" /> : "Search & Redeem"}
             </button>
           </div>
         </div>
