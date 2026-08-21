@@ -27,6 +27,7 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
   const [justCheckedIn, setJustCheckedIn] = useState(false);
 
   const lastScanned = useRef<string>("");
+  const lastScannedTime = useRef<number>(0);
 
   const isScanningRef = useRef(false);
   const modalOpenRef = useRef(false);
@@ -37,14 +38,25 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
     import("@/components/QrScanner").catch(() => {});
   }, []);
 
+  const closeModal = useCallback(() => {
+    setModalOpen(false);
+    setActiveRegistration(null);
+    setJustCheckedIn(false);
+    lastScanned.current = "";
+    lastScannedTime.current = 0;
+  }, []);
+
   const handleRedeem = useCallback(
     async (qrCodeString: string) => {
       const code = qrCodeString?.trim();
       if (!code) return;
       if (isScanningRef.current || modalOpenRef.current) return;
-      if (code === lastScanned.current) return;
+
+      const now = Date.now();
+      if (code === lastScanned.current && now - lastScannedTime.current < 1500) return;
 
       lastScanned.current = code;
+      lastScannedTime.current = now;
       isScanningRef.current = true;
       setScanning(true);
       setResult(null);
@@ -123,13 +135,7 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
 
         // Auto close dialog after 2.5 seconds
         setTimeout(() => {
-          setModalOpen((prev) => {
-            if (prev) {
-              setActiveRegistration(null);
-              setJustCheckedIn(false);
-            }
-            return false;
-          });
+          closeModal();
         }, 2500);
 
         // Clear notification result after 5s
@@ -141,10 +147,7 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
       alert("Network error. Please try again.");
     } finally {
       setRedeeming(false);
-      // Reset scan cache delay after modal close
-      setTimeout(() => {
-        lastScanned.current = "";
-      }, 3000);
+      lastScanned.current = "";
     }
   };
 
@@ -221,14 +224,14 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
         ) : (
           <>
             <QrScanner
-              active={scannerActive && !modalOpen}
+              active={scannerActive}
               onScan={handleRedeem}
               onError={(e) => setResult({ type: "error", message: e })}
             />
             <button
               className="btn btn-secondary btn-sm"
               style={{ marginTop: "0.75rem", width: "100%" }}
-              onClick={() => { setScannerActive(false); setResult(null); lastScanned.current = ""; }}
+              onClick={() => { setScannerActive(false); setResult(null); closeModal(); }}
             >
               Stop Scanner
             </button>
@@ -301,7 +304,7 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
               </h3>
               <button
                 style={{ background: "none", border: "none", fontSize: "1.5rem", color: "var(--gray-400)", cursor: "pointer", display: "flex", alignItems: "center", padding: "0 0.25rem" }}
-                onClick={() => { setModalOpen(false); setActiveRegistration(null); }}
+                onClick={closeModal}
               >
                 &times;
               </button>
@@ -423,7 +426,7 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
             }}>
               <button
                 className="btn btn-secondary"
-                onClick={() => { setModalOpen(false); setActiveRegistration(null); setJustCheckedIn(false); }}
+                onClick={closeModal}
                 style={{ minWidth: "80px" }}
               >
                 Close
@@ -447,7 +450,7 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
               {justCheckedIn ? (
                 <button
                   className="btn btn-primary"
-                  onClick={() => { setModalOpen(false); setActiveRegistration(null); setJustCheckedIn(false); }}
+                  onClick={closeModal}
                   style={{
                     background: "var(--emerald-600)",
                     borderColor: "var(--emerald-600)",

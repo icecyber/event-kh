@@ -14,6 +14,11 @@ export default function QrScanner({ onScan, onError, active = true }: QrScannerP
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [status, setStatus] = useState<"idle" | "starting" | "active" | "error">("idle");
 
+  const onScanRef = useRef(onScan);
+  onScanRef.current = onScan;
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
+
   useEffect(() => {
     if (!active) {
       if (scannerRef.current) {
@@ -55,7 +60,7 @@ export default function QrScanner({ onScan, onError, active = true }: QrScannerP
           },
           (decodedText: string) => {
             if (isMounted) {
-              onScan(decodedText);
+              onScanRef.current?.(decodedText);
             }
           },
           () => {
@@ -77,7 +82,7 @@ export default function QrScanner({ onScan, onError, active = true }: QrScannerP
       } catch (err: any) {
         if (isMounted) {
           setStatus("error");
-          onError?.(err?.message || err || "Camera not available");
+          onErrorRef.current?.(err?.message || err || "Camera not available");
         }
       }
     };
@@ -98,7 +103,7 @@ export default function QrScanner({ onScan, onError, active = true }: QrScannerP
         }
       }
     };
-  }, [active, onScan, onError]);
+  }, [active]);
 
   return (
     <div className="qr-scanner-wrapper">
