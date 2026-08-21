@@ -74,13 +74,15 @@ export default function ParticipantsTab({
   useEffect(() => { fetchParticipants(); }, [fetchParticipants]);
 
   const handleRedeem = async (reg: Participant) => {
-    if (!reg.qrCodeString) return;
     setRedeemingId(reg.id);
     try {
       await fetch(`/api/events/${eventId}/redeem`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ qrCodeString: reg.qrCodeString }),
+        body: JSON.stringify({
+          registrationId: reg.id,
+          qrCodeString: reg.qrCodeString || undefined,
+        }),
       });
       await fetchParticipants();
     } finally {
