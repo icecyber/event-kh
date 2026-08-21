@@ -57,13 +57,58 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       },
     });
 
-    // 2. If not found and this is a lookup/search, support searching by ID, name, email, or phone
+    // 2. If scanned text is a confirmation URL, extract the registration ID
+    if (!registration && cleanQr.includes("/confirmation/")) {
+      const extractedId = cleanQr.split("/confirmation/")[1]?.split(/[\?\#\/]/)[0]?.trim();
+      if (extractedId) {
+        registration = await prisma.registration.findFirst({
+          where: { id: extractedId, eventId },
+          include: {
+            attendee: { select: { id: true, name: true, email: true } },
+            ticketType: true,
+          },
+        });
+      }
+    }
+
+    // 3. If scanned text is from badge fallback (e.g. "Event Title|Attendee Name")
+    if (!registration && cleanQr.includes("|")) {
+      const parts = cleanQr.split("|");
+      const namePart = parts[parts.length - 1]?.trim();
+      if (namePart) {
+        registration = await prisma.registration.findFirst({
+          where: {
+            eventId,
+            OR: [
+              { attendee: { name: namePart } },
+              { guestName: namePart },
+            ],
+          },
+          include: {
+            attendee: { select: { id: true, name: true, email: true } },
+            ticketType: true,
+          },
+        });
+      }
+    }
+
+    // 4. Try direct ID match if cleanQr is a cuid/uuid
+    if (!registration) {
+      registration = await prisma.registration.findFirst({
+        where: { id: cleanQr, eventId },
+        include: {
+          attendee: { select: { id: true, name: true, email: true } },
+          ticketType: true,
+        },
+      });
+    }
+
+    // 5. If not found and this is a lookup/search, support searching by name, email, or phone
     if (!registration && lookupOnly) {
       registration = await prisma.registration.findFirst({
         where: {
           eventId,
           OR: [
-            { id: cleanQr },
             { attendee: { name: { contains: cleanQr } } },
             { attendee: { email: { contains: cleanQr } } },
             { guestName: { contains: cleanQr } },
