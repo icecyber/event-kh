@@ -24,6 +24,7 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
   const [activeRegistration, setActiveRegistration] = useState<any | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [redeeming, setRedeeming] = useState(false);
+  const [justCheckedIn, setJustCheckedIn] = useState(false);
 
   const lastScanned = useRef<string>("");
 
@@ -47,6 +48,7 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
       isScanningRef.current = true;
       setScanning(true);
       setResult(null);
+      setJustCheckedIn(false);
 
       try {
         // Perform a lookup-only request first to pull registration details
@@ -62,6 +64,7 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
           lastScanned.current = ""; // Reset on error so they can re-try same code if corrected
         } else {
           setActiveRegistration(data);
+          setJustCheckedIn(false);
           setModalOpen(true);
         }
       } catch {
@@ -90,11 +93,12 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
       const data = await res.json();
 
       if (res.status === 409) {
-        // Already checked in
+        // Already checked in previously
         setActiveRegistration({
           ...activeRegistration,
           checkedInAt: data.checkedInAt || new Date().toISOString(),
         });
+        setJustCheckedIn(false);
         setResult({
           type: "already",
           message: "Already checked in",
@@ -104,7 +108,8 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
       } else if (!res.ok) {
         alert(data.error || "Redemption failed");
       } else {
-        // Successful check-in
+        // Successful check-in!
+        setJustCheckedIn(true);
         setActiveRegistration({
           ...activeRegistration,
           checkedInAt: data.checkedInAt || new Date().toISOString(),
@@ -115,7 +120,19 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
           attendee: data.attendee,
           ticketType: data.ticketType,
         });
-        // Clear result after 5s
+
+        // Auto close dialog after 2.5 seconds
+        setTimeout(() => {
+          setModalOpen((prev) => {
+            if (prev) {
+              setActiveRegistration(null);
+              setJustCheckedIn(false);
+            }
+            return false;
+          });
+        }, 2500);
+
+        // Clear notification result after 5s
         setTimeout(() => {
           setResult(null);
         }, 5000);
@@ -291,7 +308,29 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
             </div>
 
             {/* Status Indicator */}
-            {activeRegistration.checkedInAt ? (
+            {justCheckedIn ? (
+              <div style={{
+                background: "#ecfdf5",
+                color: "#065f46",
+                borderRadius: "0.75rem",
+                padding: "0.85rem 1rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                fontSize: "0.875rem",
+                fontWeight: 600,
+                border: "1.5px solid #10b981",
+                boxShadow: "0 4px 12px rgba(16, 185, 129, 0.15)"
+              }}>
+                <span style={{ fontSize: "1.5rem" }}>🎉</span>
+                <div>
+                  <div style={{ fontSize: "1rem", fontWeight: 800 }}>Checked In Successfully!</div>
+                  <div style={{ fontSize: "0.8rem", fontWeight: 500, opacity: 0.9, marginTop: "0.15rem" }}>
+                    Attendee has been admitted to the event.
+                  </div>
+                </div>
+              </div>
+            ) : activeRegistration.checkedInAt ? (
               <div style={{
                 background: "#fef2f2",
                 color: "#991b1b",
@@ -314,8 +353,8 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
               </div>
             ) : (
               <div style={{
-                background: "#ecfdf5",
-                color: "#065f46",
+                background: "#eff6ff",
+                color: "#1e40af",
                 borderRadius: "0.75rem",
                 padding: "0.75rem 1rem",
                 display: "flex",
@@ -323,13 +362,13 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
                 gap: "0.75rem",
                 fontSize: "0.875rem",
                 fontWeight: 600,
-                border: "1px solid #d1fae5"
+                border: "1px solid #dbeafe"
               }}>
-                <span style={{ fontSize: "1.25rem" }}>✅</span>
+                <span style={{ fontSize: "1.25rem" }}>🎟️</span>
                 <div>
-                  <div style={{ fontSize: "0.95rem", fontWeight: 700 }}>Ready to Redeem</div>
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700 }}>Ready to Check In</div>
                   <div style={{ fontSize: "0.8rem", fontWeight: 400, opacity: 0.9, marginTop: "0.15rem" }}>
-                    This ticket is valid and can be checked in.
+                    This ticket is valid and verified.
                   </div>
                 </div>
               </div>
@@ -384,7 +423,7 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
             }}>
               <button
                 className="btn btn-secondary"
-                onClick={() => { setModalOpen(false); setActiveRegistration(null); }}
+                onClick={() => { setModalOpen(false); setActiveRegistration(null); setJustCheckedIn(false); }}
                 style={{ minWidth: "80px" }}
               >
                 Close
@@ -405,7 +444,20 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
                 🖨️ Print Badge
               </button>
 
-              {!activeRegistration.checkedInAt && (
+              {justCheckedIn ? (
+                <button
+                  className="btn btn-primary"
+                  onClick={() => { setModalOpen(false); setActiveRegistration(null); setJustCheckedIn(false); }}
+                  style={{
+                    background: "var(--emerald-600)",
+                    borderColor: "var(--emerald-600)",
+                    color: "#fff",
+                    boxShadow: "0 4px 12px rgba(16, 185, 129, 0.25)"
+                  }}
+                >
+                  ✅ Done / Next Attendee
+                </button>
+              ) : !activeRegistration.checkedInAt ? (
                 <button
                   className="btn btn-primary"
                   onClick={confirmRedeem}
@@ -422,7 +474,7 @@ export default function RedeemTab({ eventId }: { eventId: string }) {
                 >
                   {redeeming ? <span className="spinner" /> : "✅ Confirm Check-In"}
                 </button>
-              )}
+              ) : null}
             </div>
 
           </div>
